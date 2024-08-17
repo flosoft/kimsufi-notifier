@@ -11,4 +11,5 @@ require (
 	github.com/spf13/cobra v1.8.1
 	golang.org/x/oauth2 v0.22.0 // indirect
 	golang.org/x/sys v0.24.0 // indirect
+	gopkg.in/telebot.v3 v3.3.8
 )

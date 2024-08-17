@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/TheoBrigitte/kimsufi-notifier/cmd/bot"
 	"github.com/TheoBrigitte/kimsufi-notifier/cmd/check"
 	"github.com/TheoBrigitte/kimsufi-notifier/cmd/list"
 	"github.com/TheoBrigitte/kimsufi-notifier/cmd/order"
@@ -30,4 +31,5 @@ func init() {
 	rootCmd.AddCommand(check.Cmd)
 	rootCmd.AddCommand(order.Cmd)
 	rootCmd.AddCommand(list.Cmd)
+	rootCmd.AddCommand(bot.Cmd)
 }
