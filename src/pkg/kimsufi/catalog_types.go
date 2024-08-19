@@ -1,7 +1,7 @@
 package kimsufi
 
 type Catalog struct {
-	CatalogID    int          `json:"catalogID"`
+	CatalogID    int          `json:"catalogId"`
 	Locale       Locale       `json:"locale"`
 	Plans        []Plan       `json:"plans"`
 	Products     []Product    `json:"products"`
@@ -29,7 +29,7 @@ type Plan struct {
 	Pricings      []Pricing           `json:"pricings"`
 	Configuration []PlanConfiguration `json:"configuration"`
 	Family        string              `json:"family"`
-	Blobs         PlanBlobs           `json:"blobs"`
+	Blobs         PlanBlobs           `json:"blobs,omitempty"`
 }
 
 type PlanAddonFamily struct {
@@ -56,7 +56,7 @@ type Pricing struct {
 	MustBeCompleted bool              `json:"mustBeCompleted"`
 	Type            string            `json:"type"`
 	//Promotions []string `json:"promotions"`
-	EngagementConfiguration PlanPricingEngagementConfiguration `json:"engagementConfiguration"`
+	EngagementConfiguration PlanPricingEngagementConfiguration `json:"engagementConfiguration,omitempty"`
 }
 
 type PlanPricingMinMax struct {
@@ -78,11 +78,11 @@ type PlanConfiguration struct {
 }
 
 type PlanBlobs struct {
-	Commercial PlanBlobsCommercial `json:"commercial"`
+	Commercial PlanBlobsCommercial `json:"commercial,omitempty"`
 }
 
 type PlanBlobsCommercial struct {
-	Range string `json:"range"`
+	Range string `json:"range,omitempty"`
 }
 
 //

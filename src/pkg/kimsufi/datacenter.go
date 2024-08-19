@@ -1,5 +1,9 @@
 package kimsufi
 
+var (
+	AllowedDatacenters = []string{"bhs", "ca", "de", "fr", "fra", "gb", "gra", "lon", "pl", "rbx", "sbg", "waw"}
+)
+
 func DatacenterFormatter(filter func(Datacenter) bool, format func(Datacenter) string) func([]Datacenter) []string {
 	f := func(datacenters []Datacenter) []string {
 		var result []string

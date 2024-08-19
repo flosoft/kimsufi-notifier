@@ -9,6 +9,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	tele "gopkg.in/telebot.v3"
+
+	"github.com/TheoBrigitte/kimsufi-notifier/pkg/kimsufi"
 )
 
 var (
@@ -52,6 +54,10 @@ func runner(cmd *cobra.Command, args []string) error {
 		return c.Send("Hello! @" + username)
 	})
 
+	b.Handle("/help", func(c tele.Context) error {
+		return c.Send("Available commands: /help, /subscribe, /unsubscribe, /countries, /datacenters, /plans")
+	})
+
 	b.Handle("/subscribe", func(c tele.Context) error {
 		username := c.Sender().Username
 		fmt.Printf("payload: %s\n", c.Message().Payload)
@@ -91,12 +97,16 @@ func runner(cmd *cobra.Command, args []string) error {
 		return c.Send(fmt.Sprintf("@%s you unsubscribed from subscription %d", username, subscriptionId))
 	})
 
+	b.Handle("/countries", func(c tele.Context) error {
+		return c.Send(fmt.Sprintf("Allowed countries: %s", strings.Join(kimsufi.AllowedCountries, ", ")))
+	})
+
 	b.Handle("/datacenters", func(c tele.Context) error {
-		return c.Send("Available datacenters: ams, fra, nyc, sfo, tor")
+		return c.Send(fmt.Sprintf("Allowed datacenters: %s", strings.Join(kimsufi.AllowedDatacenters, ", ")))
 	})
 
 	b.Handle("/plans", func(c tele.Context) error {
-		return c.Send("Available plans: 1cpu-1gb, 1cpu-2gb, 2cpu-4gb, 2cpu-8gb, 4cpu-8gb, 4cpu-16gb, 8cpu-16gb, 8cpu-32gb, 16cpu-32gb, 16cpu-64gb, 32cpu-64gb, 32cpu-128gb")
+		return c.Send("Allowed plans: 1cpu-1gb, 1cpu-2gb, 2cpu-4gb, 2cpu-8gb, 4cpu-8gb, 4cpu-16gb, 8cpu-16gb, 8cpu-32gb, 16cpu-32gb, 16cpu-64gb, 32cpu-64gb, 32cpu-128gb")
 	})
 
 	fmt.Println("Bot is running")

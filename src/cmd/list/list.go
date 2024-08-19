@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/TheoBrigitte/kimsufi-notifier/pkg/kimsufi"
+	"github.com/TheoBrigitte/kimsufi-notifier/pkg/logger"
 )
 
 var (
@@ -34,9 +35,9 @@ const (
 )
 
 func init() {
-	Cmd.PersistentFlags().StringVarP(&ovhSubsidiary, "country", "c", "FR", "country code to filter entries (allowed values: CZ, DE, ES, FI, FR, GB, IE, IT, LT, MA, NL, PL, PT, SN, TN)")
-	Cmd.PersistentFlags().StringSliceVarP(&datacenters, "datacenters", "d", nil, "comma separated list of datacenters to check (allowed values: bhs, ca, de, fr, fra, gb, gra, lon, pl, rbx, sbg, waw)")
-	Cmd.PersistentFlags().StringVarP(&logLevel, "log-level", "l", "error", "log level (allowed values: debug, info, warn, error, fatal, panic)")
+	Cmd.PersistentFlags().StringVarP(&ovhSubsidiary, "country", "c", "FR", fmt.Sprintf("country code to filter entries (allowed values: %s)", strings.Join(kimsufi.AllowedCountries, ", ")))
+	Cmd.PersistentFlags().StringSliceVarP(&datacenters, "datacenters", "d", nil, fmt.Sprintf("comma separated list of datacenters to check (allowed values: %s)", strings.Join(kimsufi.AllowedDatacenters, ", ")))
+	Cmd.PersistentFlags().StringVarP(&logLevel, "log-level", "l", "error", fmt.Sprintf("log level (allowed values: %s)", strings.Join(logger.AllowedLevelsString(), ", ")))
 	Cmd.PersistentFlags().StringVarP(&planCode, "plan-code", "p", "", "plan code name (e.g. 22sk011)")
 }
 
