@@ -63,10 +63,10 @@ func (s *Service) GetAvailabilities(datacenters []string, planCode string) (*Ava
 	var availabilities *Availabilities
 	cacheEntry, found := s.cache.Get(u.String())
 	if found {
-		s.logger.Debugf("Cache hit: %s", u.String())
+		s.logger.Debugf("cache hit: %s", u.String())
 		availabilities = cacheEntry.(*Availabilities)
 	} else {
-		s.logger.Debugf("Cache miss: %s", u.String())
+		s.logger.Debugf("cache miss: %s", u.String())
 		err = s.client.GetUnAuth(u.String(), &availabilities)
 		if err != nil {
 			return nil, err
@@ -86,11 +86,11 @@ func (s *Service) ListServers(ovhSubsidiary string) (*Catalog, error) {
 	var catalog *Catalog
 	cacheEntry, found := s.cache.Get(u.String())
 	if found {
-		s.logger.Debugf("Cache hit: %s", u.String())
+		s.logger.Debugf("cache hit: %s", u.String())
 		catalog = cacheEntry.(*Catalog)
 
 	} else {
-		s.logger.Debugf("Cache miss: %s", u.String())
+		s.logger.Debugf("cache miss: %s", u.String())
 		err = s.client.GetUnAuth(u.String(), &catalog)
 		if err != nil {
 			return nil, err

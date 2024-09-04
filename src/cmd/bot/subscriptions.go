@@ -32,7 +32,7 @@ func checkSubscriptions(k *kimsufi.Service, s *subscription.Service, b *tele.Bot
 
 			datacenters := availabilities.GetPlanCodeAvailableDatacenters(subscription.PlanCode)
 			if len(datacenters) > 0 {
-				_, err = b.Send(user, "Subscription <code>"+subscription.PlanCode+"</code> is available in <code>"+strings.Join(datacenters, "</code>, <code>")+"</code>", tele.ModeHTML)
+				_, err = b.Send(subscription.User, "Subscription <code>"+subscription.PlanCode+"</code> is available in <code>"+strings.Join(datacenters, "</code>, <code>")+"</code>", tele.ModeHTML)
 				if err != nil {
 					log.Errorf("subscriptioncheck: username=%s subscriptionId=%d failed to send message: %v", user.Username, id, err)
 				} else {

@@ -72,12 +72,12 @@ func listCommand(k *kimsufi.Service) func(tele.Context) error {
 
 		country := strings.ToUpper(args[0])
 		if !slices.Contains(kimsufi.AllowedCountries, country) {
-			return c.Send(fmt.Sprintf("Invalid country code: %s", country))
+			return c.Send(fmt.Sprintf("Invalid country code: <code>%s</code>", country), tele.ModeHTML)
 		}
 
 		category := args[1]
 		if !slices.Contains(kimsufi.PlanCategories, category) {
-			return c.Send(fmt.Sprintf("Invalid category: %s", category))
+			return c.Send(fmt.Sprintf("Invalid category: <code>%s</code>", category), tele.ModeHTML)
 		}
 
 		catalog, err := k.ListServers(country)
@@ -135,9 +135,9 @@ func checkCommand(k *kimsufi.Service) func(tele.Context) error {
 				if len(datacenters) > 0 {
 					datacenterMessage = strings.Join(datacenters, ", ")
 				} else {
-					datacenterMessage = "all datacenters"
+					datacenterMessage = "any datacenters"
 				}
-				return c.Send(fmt.Sprintf("%s is not available in %s", planCode, datacenterMessage))
+				return c.Send(fmt.Sprintf("<code>%s</code> is not available in %s", planCode, datacenterMessage), tele.ModeHTML)
 			} else {
 				return fmt.Errorf("failed to get availabilities: %w", err)
 			}
@@ -179,7 +179,7 @@ func subscribeCommand(k *kimsufi.Service, s *subscription.Service) func(tele.Con
 			datacenters = strings.Split(args[1], ",")
 			for _, datacenter := range datacenters {
 				if !slices.Contains(kimsufi.AllowedDatacenters, datacenter) {
-					return c.Send(fmt.Sprintf("Invalid datacenter: %s", datacenter))
+					return c.Send(fmt.Sprintf("Invalid datacenter: <code>%s</code>", datacenter), tele.ModeHTML)
 				}
 			}
 		}
@@ -191,7 +191,7 @@ func subscribeCommand(k *kimsufi.Service, s *subscription.Service) func(tele.Con
 			}
 		}
 		if len(*availabilities) <= 0 {
-			return c.Send(fmt.Sprintf("Invalid plan code: %s", planCode))
+			return c.Send(fmt.Sprintf("Invalid plan code: <code>%s</code>", planCode), tele.ModeHTML)
 		}
 
 		id := s.Subscribe(c.Sender(), planCode, datacenters)
@@ -205,7 +205,7 @@ func subscribeCommand(k *kimsufi.Service, s *subscription.Service) func(tele.Con
 			datacentersMessage = "any datacenter"
 		}
 
-		return c.Send(fmt.Sprintf("You will be notified when plan %s is available in %s %s (subscriptionId: %d)", planCode, datacentersMessage, strings.Join(datacenters, ", "), id))
+		return c.Send(fmt.Sprintf("You will be notified when plan <code>%s</code> is available in %s <code>%s</code> (subscriptionId: <code>%d</code>)", planCode, datacentersMessage, strings.Join(datacenters, "</code>, <code>"), id), tele.ModeHTML)
 	}
 }
 
@@ -225,7 +225,7 @@ func unsubscribeCommand(s *subscription.Service) func(tele.Context) error {
 
 		s.Unsubscribe(c.Sender(), subscriptionId)
 
-		return c.Send(fmt.Sprintf("You unsubscribed from subscription %d", subscriptionId))
+		return c.Send(fmt.Sprintf("You unsubscribed from subscription <code>%d</code>", subscriptionId), tele.ModeHTML)
 	}
 }
 
