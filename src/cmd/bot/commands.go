@@ -18,7 +18,7 @@ import (
 )
 
 func categoriesCommand(c tele.Context) error {
-	log.Info("Handle /categories command")
+	log.Info("Handle /categories command  username=" + c.Sender().Username)
 
 	categories := kimsufi.PlanCategories
 
@@ -33,7 +33,7 @@ func categoriesCommand(c tele.Context) error {
 }
 
 func countriesCommand(c tele.Context) error {
-	log.Info("Handle /countries command")
+	log.Info("Handle /countries command  username=" + c.Sender().Username)
 
 	countries := kimsufi.AllowedCountries
 
@@ -48,7 +48,7 @@ func countriesCommand(c tele.Context) error {
 }
 
 func helpCommand(c tele.Context) error {
-	log.Info("Handle /help command")
+	log.Info("Handle /help command  username=" + c.Sender().Username)
 
 	output := "Hello,\n"
 	output += "This bot can help you to monitor the availability of Kimsufi servers.\n"
@@ -69,7 +69,7 @@ func helpCommand(c tele.Context) error {
 
 func listCommand(k *kimsufi.Service) func(tele.Context) error {
 	return func(c tele.Context) error {
-		log.Info("Handle /list command")
+		log.Info("Handle /list command  username=" + c.Sender().Username)
 
 		args := c.Args()
 		if len(args) < 2 {
@@ -122,7 +122,7 @@ func listCommand(k *kimsufi.Service) func(tele.Context) error {
 
 func checkCommand(k *kimsufi.Service) func(tele.Context) error {
 	return func(c tele.Context) error {
-		log.Info("Handle /check command")
+		log.Info("Handle /check command  username=" + c.Sender().Username)
 
 		args := c.Args()
 		if len(args) < 1 {
@@ -172,7 +172,7 @@ func checkCommand(k *kimsufi.Service) func(tele.Context) error {
 }
 func subscribeCommand(k *kimsufi.Service, s *subscription.Service) func(tele.Context) error {
 	return func(c tele.Context) error {
-		log.Info("Handle /subscribe command")
+		log.Info("Handle /subscribe command  username=" + c.Sender().Username)
 
 		args := c.Args()
 		if len(args) < 1 {
@@ -218,7 +218,7 @@ func subscribeCommand(k *kimsufi.Service, s *subscription.Service) func(tele.Con
 
 func unsubscribeCommand(s *subscription.Service) func(tele.Context) error {
 	return func(c tele.Context) error {
-		log.Info("Handle /unsubscribe command")
+		log.Info("Handle /unsubscribe command  username=" + c.Sender().Username)
 
 		args := c.Args()
 		if len(args) < 1 {
@@ -238,7 +238,7 @@ func unsubscribeCommand(s *subscription.Service) func(tele.Context) error {
 
 func listSubscriptionsCommand(s *subscription.Service) func(tele.Context) error {
 	return func(c tele.Context) error {
-		log.Info("Handle /listsubscriptions command")
+		log.Info("Handle /listsubscriptions command  username=" + c.Sender().Username)
 
 		subscriptions := s.List(c.Sender())
 

@@ -23,9 +23,9 @@ func startSubscriptionCheck(k *kimsufi.Service, s *subscription.Service, b *tele
 }
 
 func checkSubscriptions(k *kimsufi.Service, s *subscription.Service, b *tele.Bot) error {
-	log.Info("subscriptioncheck: check subscriptions start")
 	for _, subscriptions := range s.Subscriptions {
 		for id, subscription := range subscriptions {
+			log.Infof("subscriptioncheck: username=%s subscriptionId=%d check", subscription.User.Username, id)
 			availabilities, err := k.GetAvailabilities(subscription.Datacenters, subscription.PlanCode)
 			if err != nil {
 				log.Errorf("subscriptioncheck: username=%s subscriptionId=%d failed to get availabilities: %v", subscription.User.Username, id, err)
@@ -42,7 +42,6 @@ func checkSubscriptions(k *kimsufi.Service, s *subscription.Service, b *tele.Bot
 			}
 		}
 	}
-	log.Info("subscriptioncheck: check subscriptions end")
 
 	return nil
 }
