@@ -194,7 +194,7 @@ func subscribeCommand(k *kimsufi.Service, s *subscription.Service) func(tele.Con
 			return c.Send(fmt.Sprintf("Invalid plan code: %s", planCode))
 		}
 
-		id := s.Subscribe(planCode, datacenters)
+		id := s.Subscribe(c.Sender(), planCode, datacenters)
 
 		var datacentersMessage string
 		if len(datacenters) > 1 {
@@ -223,7 +223,7 @@ func unsubscribeCommand(s *subscription.Service) func(tele.Context) error {
 			return c.Send("Invalid subscription ID")
 		}
 
-		s.Unsubscribe(subscriptionId)
+		s.Unsubscribe(c.Sender(), subscriptionId)
 
 		return c.Send(fmt.Sprintf("You unsubscribed from subscription %d", subscriptionId))
 	}
@@ -233,7 +233,7 @@ func listSubscriptionsCommand(s *subscription.Service) func(tele.Context) error 
 	return func(c tele.Context) error {
 		log.Info("Handle /listsubscriptions command")
 
-		subscriptions := s.List()
+		subscriptions := s.List(c.Sender())
 
 		var output = &bytes.Buffer{}
 		w := tabwriter.NewWriter(output, 0, 0, 4, ' ', 0)

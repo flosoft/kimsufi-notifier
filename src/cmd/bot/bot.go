@@ -65,6 +65,8 @@ func runner(cmd *cobra.Command, args []string) error {
 	telegramBot.Handle(commands["unsubscribe"], unsubscribeCommand(s))
 	telegramBot.Handle(commands["listsubscriptions"], listSubscriptionsCommand(s))
 
+	startSubscriptionCheck(k, s, telegramBot)
+
 	fmt.Println("Bot is running")
 	telegramBot.Start()
 
