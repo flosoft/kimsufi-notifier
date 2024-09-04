@@ -151,6 +151,55 @@ func runner(cmd *cobra.Command, args []string) error {
 		return c.Send("<pre>"+output.String()+"</pre>", tele.ModeHTML)
 	})
 
+	telegramBot.Handle("/check", func(c tele.Context) error {
+		log.Info("Handle /check command")
+
+		args := c.Args()
+		if len(args) < 1 {
+			return c.Send("Usage: /check <planCode> [ <datacenter1>,<datacenter2>,... ]")
+		}
+
+		planCode := args[0]
+		datacenters := []string{}
+		if len(args) > 1 {
+			datacenters = strings.Split(args[1], ",")
+		}
+
+		availabilities, err := k.GetAvailabilities(datacenters, planCode)
+		if err != nil {
+			if kimsufi.IsNotAvailableError(err) {
+				datacenterMessage := ""
+				if len(datacenters) > 0 {
+					datacenterMessage = strings.Join(datacenters, ", ")
+				} else {
+					datacenterMessage = "all datacenters"
+				}
+				return c.Send(fmt.Sprintf("%s is not available in %s", planCode, datacenterMessage))
+			} else {
+				return fmt.Errorf("failed to get availabilities: %w", err)
+			}
+		}
+
+		formatter := kimsufi.DatacenterFormatter(kimsufi.IsDatacenterAvailable, kimsufi.DatacenterKey)
+		result := availabilities.Format(kimsufi.PlanCode, formatter)
+
+		var output = &bytes.Buffer{}
+		w := tabwriter.NewWriter(output, 0, 0, 4, ' ', 0)
+		fmt.Fprintln(w, "planCode\tstatus\tdatacenters")
+		fmt.Fprintln(w, "--------\t------\t-----------")
+
+		for k, v := range result {
+			status := "available"
+			if len(v) == 0 {
+				status = "unavailable"
+			}
+			fmt.Fprintf(w, "%s\t%s\t%s\n", k, status, strings.Join(v, ", "))
+		}
+		w.Flush()
+
+		return c.Send("<pre>"+output.String()+"</pre>", tele.ModeHTML)
+	})
+
 	fmt.Println("Bot is running")
 	telegramBot.Start()
 
