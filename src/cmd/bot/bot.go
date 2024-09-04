@@ -48,6 +48,8 @@ func runner(cmd *cobra.Command, args []string) error {
 	}
 
 	telegramBot.Handle("/categories", func(c tele.Context) error {
+		log.Info("Handle /categories command")
+
 		categories := kimsufi.PlanCategories
 
 		output := "Available categories:\n"
@@ -61,6 +63,8 @@ func runner(cmd *cobra.Command, args []string) error {
 	})
 
 	telegramBot.Handle("/countries", func(c tele.Context) error {
+		log.Info("Handle /countries command")
+
 		countries := kimsufi.AllowedCountries
 
 		output := "Allowed countries:\n"
@@ -74,6 +78,8 @@ func runner(cmd *cobra.Command, args []string) error {
 	})
 
 	telegramBot.Handle("/list", func(c tele.Context) error {
+		log.Info("Handle /list command")
+
 		args := c.Args()
 		if len(args) < 2 {
 			c.Send("Usage: /list <country> <category>")
@@ -94,7 +100,6 @@ func runner(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return fmt.Errorf("failed to list servers: %w", err)
 		}
-		log.Infof("Found %d plans\n", len(catalog.Plans))
 
 		var output = &bytes.Buffer{}
 		w := tabwriter.NewWriter(output, 0, 0, 4, ' ', 0)
