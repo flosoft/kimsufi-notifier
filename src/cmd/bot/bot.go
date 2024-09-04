@@ -5,6 +5,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	tele "gopkg.in/telebot.v3"
 
 	"github.com/TheoBrigitte/kimsufi-notifier/cmd/flag"
 	"github.com/TheoBrigitte/kimsufi-notifier/pkg/kimsufi"
@@ -91,6 +92,7 @@ func runner(cmd *cobra.Command, args []string) error {
 	telegramBot.Handle(commands["subscribe"].command, subscribeCommand(k, s))
 	telegramBot.Handle(commands["unsubscribe"].command, unsubscribeCommand(s))
 	telegramBot.Handle(commands["listsubscriptions"].command, listSubscriptionsCommand(s))
+	telegramBot.Handle(tele.OnText, helpCommand)
 
 	startSubscriptionCheck(k, s, telegramBot)
 
