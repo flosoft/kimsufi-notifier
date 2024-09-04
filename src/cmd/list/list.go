@@ -12,6 +12,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
+	"github.com/TheoBrigitte/kimsufi-notifier/cmd/flag"
 	"github.com/TheoBrigitte/kimsufi-notifier/pkg/kimsufi"
 )
 
@@ -35,7 +36,7 @@ func init() {
 
 func runner(cmd *cobra.Command, args []string) error {
 	d := kimsufi.Config{
-		URL:    kimsufi.DefaultKimsufiAPI,
+		URL:    kimsufi.GetOVHEndpoint(cmd.Flag(flag.OVHAPIEndpointFlagName).Value.String()),
 		Logger: log.StandardLogger(),
 	}
 	k, err := kimsufi.NewService(d)

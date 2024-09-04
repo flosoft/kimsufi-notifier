@@ -3,11 +3,13 @@ package cmd
 import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+
+	"github.com/TheoBrigitte/kimsufi-notifier/cmd/flag"
 )
 
 // logLevel set the level of the logger.
 func logLevel(cmd *cobra.Command, args []string) error {
-	level, err := log.ParseLevel(cmd.Flag("log-level").Value.String())
+	level, err := log.ParseLevel(cmd.Flag(flag.LogLevelFlagName).Value.String())
 	if err != nil {
 		return err
 	}

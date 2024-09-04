@@ -7,6 +7,7 @@ import (
 
 	"github.com/TheoBrigitte/kimsufi-notifier/cmd/bot"
 	"github.com/TheoBrigitte/kimsufi-notifier/cmd/check"
+	"github.com/TheoBrigitte/kimsufi-notifier/cmd/flag"
 	"github.com/TheoBrigitte/kimsufi-notifier/cmd/list"
 	"github.com/TheoBrigitte/kimsufi-notifier/cmd/order"
 )
@@ -28,6 +29,8 @@ func Execute() {
 }
 
 func init() {
+	flag.Bind(rootCmd)
+
 	rootCmd.AddCommand(check.Cmd)
 	rootCmd.AddCommand(order.Cmd)
 	rootCmd.AddCommand(list.Cmd)
