@@ -23,20 +23,20 @@ func startSubscriptionCheck(k *kimsufi.Service, s *subscription.Service, b *tele
 
 func checkSubscriptions(k *kimsufi.Service, s *subscription.Service, b *tele.Bot) error {
 	log.Info("subscriptioncheck: check subscriptions start")
-	for user, subscriptions := range s.Subscriptions {
+	for _, subscriptions := range s.Subscriptions {
 		for id, subscription := range subscriptions {
 			availabilities, err := k.GetAvailabilities(subscription.Datacenters, subscription.PlanCode)
 			if err != nil {
-				log.Errorf("subscriptioncheck: username=%s subscriptionId=%d failed to get availabilities: %v", user.Username, id, err)
+				log.Errorf("subscriptioncheck: username=%s subscriptionId=%d failed to get availabilities: %v", subscription.User.Username, id, err)
 			}
 
 			datacenters := availabilities.GetPlanCodeAvailableDatacenters(subscription.PlanCode)
 			if len(datacenters) > 0 {
 				_, err = b.Send(subscription.User, "Subscription <code>"+subscription.PlanCode+"</code> is available in <code>"+strings.Join(datacenters, "</code>, <code>")+"</code>", tele.ModeHTML)
 				if err != nil {
-					log.Errorf("subscriptioncheck: username=%s subscriptionId=%d failed to send message: %v", user.Username, id, err)
+					log.Errorf("subscriptioncheck: username=%s subscriptionId=%d failed to send message: %v", subscription.User.Username, id, err)
 				} else {
-					s.Unsubscribe(user, id)
+					s.Unsubscribe(subscription.User, id)
 				}
 			}
 		}

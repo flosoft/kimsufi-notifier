@@ -7,44 +7,46 @@ import (
 type Subscription struct {
 	PlanCode    string
 	Datacenters []string
+	User        *tele.User
 }
 
 type Service struct {
-	Subscriptions map[*tele.User]map[int]Subscription
+	Subscriptions map[int64]map[int]Subscription
 }
 
 func NewService() *Service {
 	s := &Service{}
-	s.Subscriptions = make(map[*tele.User]map[int]Subscription)
+	s.Subscriptions = make(map[int64]map[int]Subscription)
 
 	return s
 }
 
 func (s *Service) Subscribe(telegramUser *tele.User, planCode string, datacenters []string) int {
-	if _, ok := s.Subscriptions[telegramUser]; !ok {
-		s.Subscriptions[telegramUser] = make(map[int]Subscription)
+	if _, ok := s.Subscriptions[telegramUser.ID]; !ok {
+		s.Subscriptions[telegramUser.ID] = make(map[int]Subscription)
 	}
 
-	s.Subscriptions[telegramUser][len(s.Subscriptions[telegramUser])] = Subscription{
+	s.Subscriptions[telegramUser.ID][len(s.Subscriptions[telegramUser.ID])] = Subscription{
 		PlanCode:    planCode,
 		Datacenters: datacenters,
+		User:        telegramUser,
 	}
 
-	return len(s.Subscriptions[telegramUser]) - 1
+	return len(s.Subscriptions[telegramUser.ID]) - 1
 }
 
 func (s *Service) Unsubscribe(telegramUser *tele.User, subscriptionId int) {
-	if _, ok := s.Subscriptions[telegramUser]; !ok {
+	if _, ok := s.Subscriptions[telegramUser.ID]; !ok {
 		return
 	}
 
-	delete(s.Subscriptions[telegramUser], subscriptionId)
+	delete(s.Subscriptions[telegramUser.ID], subscriptionId)
 }
 
 func (s *Service) List(telegramUser *tele.User) map[int]Subscription {
-	if _, ok := s.Subscriptions[telegramUser]; !ok {
+	if _, ok := s.Subscriptions[telegramUser.ID]; !ok {
 		return nil
 	}
 
-	return s.Subscriptions[telegramUser]
+	return s.Subscriptions[telegramUser.ID]
 }
