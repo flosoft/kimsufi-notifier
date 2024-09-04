@@ -6,8 +6,6 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/ovh/go-ovh/ovh"
-
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
@@ -24,10 +22,6 @@ var (
 
 	datacenters []string
 	planCode    string
-
-const (
-	kimsufiAPI = ovh.OvhEU
-	smsAPI     = "https://smsapi.free-mobile.fr/sendmsg"
 )
 
 func init() {
@@ -38,7 +32,7 @@ func init() {
 
 func runner(cmd *cobra.Command, args []string) error {
 	d := kimsufi.Config{
-		URL:    kimsufiAPI,
+		URL:    kimsufi.DefaultKimsufiAPI,
 		Logger: log.StandardLogger(),
 	}
 	k, err := kimsufi.NewService(d)
