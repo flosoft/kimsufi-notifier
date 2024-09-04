@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"slices"
 	"sort"
+	"strconv"
 	"strings"
 	"text/tabwriter"
 
@@ -13,6 +14,7 @@ import (
 	tele "gopkg.in/telebot.v3"
 
 	"github.com/TheoBrigitte/kimsufi-notifier/pkg/kimsufi"
+	"github.com/TheoBrigitte/kimsufi-notifier/pkg/subscription"
 )
 
 func categoriesCommand(c tele.Context) error {
@@ -155,6 +157,91 @@ func checkCommand(k *kimsufi.Service) func(tele.Context) error {
 				status = "unavailable"
 			}
 			fmt.Fprintf(w, "%s\t%s\t%s\n", k, status, strings.Join(v, ", "))
+		}
+		w.Flush()
+
+		return c.Send("<pre>"+output.String()+"</pre>", tele.ModeHTML)
+	}
+}
+func subscribeCommand(k *kimsufi.Service, s *subscription.Service) func(tele.Context) error {
+	return func(c tele.Context) error {
+		log.Info("Handle /subscribe command")
+
+		args := c.Args()
+		if len(args) < 1 {
+			return c.Send("Usage: /subscribe <planCode> [ <datacenter1>,<datacenter2>,... ]")
+		}
+
+		planCode := args[0]
+
+		datacenters := []string{}
+		if len(args) > 1 {
+			datacenters = strings.Split(args[1], ",")
+			for _, datacenter := range datacenters {
+				if !slices.Contains(kimsufi.AllowedDatacenters, datacenter) {
+					return c.Send(fmt.Sprintf("Invalid datacenter: %s", datacenter))
+				}
+			}
+		}
+
+		availabilities, err := k.GetAvailabilities(datacenters, planCode)
+		if err != nil {
+			if !kimsufi.IsNotAvailableError(err) {
+				return fmt.Errorf("failed to get subscribe: %w", err)
+			}
+		}
+		if len(*availabilities) <= 0 {
+			return c.Send(fmt.Sprintf("Invalid plan code: %s", planCode))
+		}
+
+		id := s.Subscribe(planCode, datacenters)
+
+		var datacentersMessage string
+		if len(datacenters) > 1 {
+			datacentersMessage = "one of the following datacenters"
+		} else if len(datacenters) == 1 {
+			datacentersMessage = "this datacenter"
+		} else {
+			datacentersMessage = "any datacenter"
+		}
+
+		return c.Send(fmt.Sprintf("You will be notified when plan %s is available in %s %s (subscriptionId: %d)", planCode, datacentersMessage, strings.Join(datacenters, ", "), id))
+	}
+}
+
+func unsubscribeCommand(s *subscription.Service) func(tele.Context) error {
+	return func(c tele.Context) error {
+		log.Info("Handle /unsubscribe command")
+
+		args := c.Args()
+		if len(args) < 1 {
+			return c.Send("Usage: /unsubscribe <subscriptionId>")
+		}
+
+		subscriptionId, err := strconv.Atoi(args[0])
+		if err != nil {
+			return c.Send("Invalid subscription ID")
+		}
+
+		s.Unsubscribe(subscriptionId)
+
+		return c.Send(fmt.Sprintf("You unsubscribed from subscription %d", subscriptionId))
+	}
+}
+
+func listSubscriptionsCommand(s *subscription.Service) func(tele.Context) error {
+	return func(c tele.Context) error {
+		log.Info("Handle /listsubscriptions command")
+
+		subscriptions := s.List()
+
+		var output = &bytes.Buffer{}
+		w := tabwriter.NewWriter(output, 0, 0, 4, ' ', 0)
+		fmt.Fprintln(w, "subscriptionId\tplanCode\tdatacenters")
+		fmt.Fprintln(w, "--------------\t--------\t-----------")
+
+		for k, v := range subscriptions {
+			fmt.Fprintf(w, "%d\t%s\t%s\n", k, v.PlanCode, strings.Join(v.Datacenters, ", "))
 		}
 		w.Flush()
 

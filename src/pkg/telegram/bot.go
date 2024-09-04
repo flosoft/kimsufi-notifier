@@ -28,30 +28,6 @@ func NewBot() (*tele.Bot, error) {
 		return c.Send("Hello! @" + username)
 	})
 
-	b.Handle("/subscribe", func(c tele.Context) error {
-		username := c.Sender().Username
-		fmt.Printf("payload: %s\n", c.Message().Payload)
-		var planCode string
-		var datacentersString string
-		n, err := fmt.Sscan(c.Message().Payload, &planCode, &datacentersString)
-		if err != nil {
-			fmt.Println("Invalid command")
-			return err
-		}
-		var datacenters = strings.Split(strings.Trim(datacentersString, ","), ",")
-		fmt.Printf("scanned %d variables: %s, %v\n", n, planCode, datacenters)
-
-		var datacentersMessage string
-		if len(datacenters) > 0 {
-			datacentersMessage = "one of the following datacenters"
-		} else {
-			datacentersMessage = "this datacenter"
-		}
-		subscriptionId := 1
-
-		return c.Send(fmt.Sprintf("@%s you will be notified when plan %s is available in %s %s (subscriptionId: %d)", username, planCode, datacentersMessage, strings.Join(datacenters, ", "), subscriptionId))
-	})
-
 	b.Handle("/unsubscribe", func(c tele.Context) error {
 		username := c.Sender().Username
 		fmt.Printf("payload: %s\n", c.Message().Payload)

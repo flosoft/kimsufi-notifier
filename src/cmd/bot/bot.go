@@ -8,6 +8,7 @@ import (
 
 	"github.com/TheoBrigitte/kimsufi-notifier/cmd/flag"
 	"github.com/TheoBrigitte/kimsufi-notifier/pkg/kimsufi"
+	"github.com/TheoBrigitte/kimsufi-notifier/pkg/subscription"
 	"github.com/TheoBrigitte/kimsufi-notifier/pkg/telegram"
 )
 
@@ -27,11 +28,14 @@ func init() {
 
 var (
 	commands = map[string]string{
-		"help":       "/help",
-		"categories": "/categories",
-		"countries":  "/countries",
-		"list":       "/list",
-		"check":      "/check",
+		"help":              "/help",
+		"categories":        "/categories",
+		"countries":         "/countries",
+		"list":              "/list",
+		"check":             "/check",
+		"subscribe":         "/subscribe",
+		"unsubscribe":       "/unsubscribe",
+		"listsubscriptions": "/listsubscriptions",
 	}
 )
 
@@ -45,16 +49,21 @@ func runner(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to initialize kimsufi service: %w", err)
 	}
 
+	s := subscription.NewService()
+
 	telegramBot, err := telegram.NewBot()
 	if err != nil {
 		return fmt.Errorf("failed to initialize telegram bot: %w", err)
 	}
 
-	telegramBot.Handle("/help", helpCommand)
-	telegramBot.Handle("/categories", categoriesCommand)
-	telegramBot.Handle("/countries", countriesCommand)
-	telegramBot.Handle("/list", listCommand(k))
-	telegramBot.Handle("/check", checkCommand(k))
+	telegramBot.Handle(commands["help"], helpCommand)
+	telegramBot.Handle(commands["categories"], categoriesCommand)
+	telegramBot.Handle(commands["countries"], countriesCommand)
+	telegramBot.Handle(commands["list"], listCommand(k))
+	telegramBot.Handle(commands["check"], checkCommand(k))
+	telegramBot.Handle(commands["subscribe"], subscribeCommand(k, s))
+	telegramBot.Handle(commands["unsubscribe"], unsubscribeCommand(s))
+	telegramBot.Handle(commands["listsubscriptions"], listSubscriptionsCommand(s))
 
 	fmt.Println("Bot is running")
 	telegramBot.Start()
