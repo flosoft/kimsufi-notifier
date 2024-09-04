@@ -79,9 +79,5 @@ func NewBot() (*tele.Bot, error) {
 		return c.Send(fmt.Sprintf("Allowed datacenters: %s", strings.Join(kimsufi.AllowedDatacenters, ", ")))
 	})
 
-	b.Handle("/plans", func(c tele.Context) error {
-		return c.Send("Allowed plans: 1cpu-1gb, 1cpu-2gb, 2cpu-4gb, 2cpu-8gb, 4cpu-8gb, 4cpu-16gb, 8cpu-16gb, 8cpu-32gb, 16cpu-32gb, 16cpu-64gb, 32cpu-64gb, 32cpu-128gb")
-	})
-
 	return b, nil
 }
