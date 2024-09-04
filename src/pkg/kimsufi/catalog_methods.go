@@ -6,7 +6,8 @@ var (
 	PriceDecimals = 8
 	PriceDivider  = math.Pow10(PriceDecimals)
 
-	PlanCategories = []string{"kimsufi", "soyoustart", "rise"}
+	// List of known plan categories, including an empty string for uncategorized plans
+	PlanCategories = []string{"kimsufi", "soyoustart", "rise", ""}
 
 	StatusAvailable   = "available"
 	StatusUnavailable = "unavailable"
