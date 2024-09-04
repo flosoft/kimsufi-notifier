@@ -27,15 +27,42 @@ func init() {
 }
 
 var (
-	commands = map[string]string{
-		"help":              "/help",
-		"categories":        "/categories",
-		"countries":         "/countries",
-		"list":              "/list",
-		"check":             "/check",
-		"subscribe":         "/subscribe",
-		"unsubscribe":       "/unsubscribe",
-		"listsubscriptions": "/listsubscriptions",
+	commands = map[string]struct {
+		command string
+		help    string
+	}{
+		"help": {
+			"/help",
+			"Show this help",
+		},
+		"categories": {
+			"/categories",
+			"List available categories",
+		},
+		"countries": {
+			"/countries",
+			"List available countries",
+		},
+		"list": {
+			"/list",
+			"List available plans / servers",
+		},
+		"check": {
+			"/check",
+			"Check availability of a plan",
+		},
+		"subscribe": {
+			"/subscribe",
+			"Get notified when a server becomes available",
+		},
+		"unsubscribe": {
+			"/unsubscribe",
+			"Unsubscribe from a notification",
+		},
+		"listsubscriptions": {
+			"/listsubscriptions",
+			"List active subscriptions",
+		},
 	}
 )
 
@@ -56,14 +83,14 @@ func runner(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to initialize telegram bot: %w", err)
 	}
 
-	telegramBot.Handle(commands["help"], helpCommand)
-	telegramBot.Handle(commands["categories"], categoriesCommand)
-	telegramBot.Handle(commands["countries"], countriesCommand)
-	telegramBot.Handle(commands["list"], listCommand(k))
-	telegramBot.Handle(commands["check"], checkCommand(k))
-	telegramBot.Handle(commands["subscribe"], subscribeCommand(k, s))
-	telegramBot.Handle(commands["unsubscribe"], unsubscribeCommand(s))
-	telegramBot.Handle(commands["listsubscriptions"], listSubscriptionsCommand(s))
+	telegramBot.Handle(commands["help"].command, helpCommand)
+	telegramBot.Handle(commands["categories"].command, categoriesCommand)
+	telegramBot.Handle(commands["countries"].command, countriesCommand)
+	telegramBot.Handle(commands["list"].command, listCommand(k))
+	telegramBot.Handle(commands["check"].command, checkCommand(k))
+	telegramBot.Handle(commands["subscribe"].command, subscribeCommand(k, s))
+	telegramBot.Handle(commands["unsubscribe"].command, unsubscribeCommand(s))
+	telegramBot.Handle(commands["listsubscriptions"].command, listSubscriptionsCommand(s))
 
 	startSubscriptionCheck(k, s, telegramBot)
 

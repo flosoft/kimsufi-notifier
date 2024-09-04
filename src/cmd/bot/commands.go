@@ -50,10 +50,16 @@ func countriesCommand(c tele.Context) error {
 func helpCommand(c tele.Context) error {
 	log.Info("Handle /help command")
 
-	output := "Available commands:\n"
+	output := "This bot can help you to monitor the availability of Kimsufi servers.\n"
+	output += "\n"
+	output += "You can subscribe to a plan and get notified when it becomes available.\n"
+	output += "You can also list available servers and check their availability.\n"
+	output += "\n"
+	output += "You can use the following commands:\n"
+
 	for _, command := range commands {
 		//output += "<code>" + command + "</code>\n"
-		output += command + "\n"
+		output += command.command + "  " + command.help + "\n"
 	}
 
 	return c.Send(output, tele.ModeHTML)
