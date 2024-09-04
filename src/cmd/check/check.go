@@ -38,11 +38,11 @@ func runner(cmd *cobra.Command, args []string) error {
 	}
 	k, err := kimsufi.NewService(d)
 	if err != nil {
-		log.Fatalf("error: %v\n", err)
+		return fmt.Errorf("error: %w", err)
 	}
 
 	if planCode == "" {
-		log.Fatalf("plan code is required\n")
+		return fmt.Errorf("plan code is required")
 	}
 
 	a, err := k.GetAvailabilities(datacenters, planCode)
@@ -57,7 +57,7 @@ func runner(cmd *cobra.Command, args []string) error {
 			log.Printf("%s is not available in %s\n", planCode, datacenterMessage)
 			return nil
 		} else {
-			log.Fatalf("error: %v\n", err)
+			return fmt.Errorf("error: %w", err)
 		}
 	}
 

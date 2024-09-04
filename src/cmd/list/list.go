@@ -41,17 +41,17 @@ func runner(cmd *cobra.Command, args []string) error {
 	}
 	k, err := kimsufi.NewService(d)
 	if err != nil {
-		log.Fatalf("failed to initialize kimsufi service: %v\n", err)
+		return fmt.Errorf("failed to initialize kimsufi service: %w", err)
 	}
 
 	c, err := k.ListServers(ovhSubsidiary)
 	if err != nil {
-		log.Fatalf("failed to list servers: %v\n", err)
+		return fmt.Errorf("failed to list servers: %w", err)
 	}
 
 	a, err := k.GetAvailabilities(datacenters, planCode)
 	if err != nil {
-		log.Fatalf("failed to list availabilities: %v\n", err)
+		return fmt.Errorf("failed to list availabilities: %w", err)
 	}
 
 	log.Infof("Found %d plans\n", len(c.Plans))
