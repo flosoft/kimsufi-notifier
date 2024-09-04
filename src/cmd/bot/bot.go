@@ -32,6 +32,16 @@ var (
 func init() {
 }
 
+var (
+	commands = map[string]string{
+		"help":       "/help",
+		"categories": "/categories",
+		"countries":  "/countries",
+		"list":       "/list",
+		"check":      "/check",
+	}
+)
+
 func runner(cmd *cobra.Command, args []string) error {
 	d := kimsufi.Config{
 		URL:    kimsufi.GetOVHEndpoint(cmd.Flag(flag.OVHAPIEndpointFlagName).Value.String()),
@@ -46,6 +56,19 @@ func runner(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("failed to initialize telegram bot: %w", err)
 	}
+
+	telegramBot.Handle("/help", func(c tele.Context) error {
+		log.Info("Handle /help command")
+
+		output := "Available commands:\n"
+		for _, command := range commands {
+			//output += "<code>" + command + "</code>\n"
+			output += command + "\n"
+		}
+
+		return c.Send(output, tele.ModeHTML)
+		//return c.Send("Available commands: /help, /subscribe, /unsubscribe, /countries, /datacenters, /plans")
+	})
 
 	telegramBot.Handle("/categories", func(c tele.Context) error {
 		log.Info("Handle /categories command")

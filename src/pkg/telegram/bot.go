@@ -28,10 +28,6 @@ func NewBot() (*tele.Bot, error) {
 		return c.Send("Hello! @" + username)
 	})
 
-	b.Handle("/help", func(c tele.Context) error {
-		return c.Send("Available commands: /help, /subscribe, /unsubscribe, /countries, /datacenters, /plans")
-	})
-
 	b.Handle("/subscribe", func(c tele.Context) error {
 		username := c.Sender().Username
 		fmt.Printf("payload: %s\n", c.Message().Payload)
