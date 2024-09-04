@@ -12,7 +12,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/TheoBrigitte/kimsufi-notifier/pkg/kimsufi"
-	"github.com/TheoBrigitte/kimsufi-notifier/pkg/logger"
 )
 
 // Cmd represents the check command
@@ -26,9 +25,6 @@ var (
 	datacenters []string
 	planCode    string
 
-	logLevel string
-)
-
 const (
 	kimsufiAPI = ovh.OvhEU
 	smsAPI     = "https://smsapi.free-mobile.fr/sendmsg"
@@ -37,17 +33,10 @@ const (
 func init() {
 	Cmd.PersistentFlags().StringSliceVarP(&datacenters, "datacenters", "d", nil, fmt.Sprintf("comma separated list of datacenters to check (allowed values: %s)", strings.Join(kimsufi.AllowedDatacenters, ", ")))
 	Cmd.PersistentFlags().StringVarP(&planCode, "plan-code", "p", "", fmt.Sprintf("plan code name (e.g. %s)", kimsufi.PlanCodeExample))
-	Cmd.PersistentFlags().StringVarP(&logLevel, "log-level", "l", "error", fmt.Sprintf("log level (allowed values: %s)", strings.Join(logger.AllLevelsString(), ", ")))
 
 }
 
 func runner(cmd *cobra.Command, args []string) error {
-	level, err := log.ParseLevel(logLevel)
-	if err != nil {
-		log.Fatalf("failed to parse log-level: %v\n", err)
-	}
-
-	log.SetLevel(level)
 	d := kimsufi.Config{
 		URL:    kimsufiAPI,
 		Logger: log.StandardLogger(),
