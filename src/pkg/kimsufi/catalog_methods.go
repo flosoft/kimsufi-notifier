@@ -26,3 +26,13 @@ func (p Plan) FirstPrice() Pricing {
 
 	return p.Pricings[0]
 }
+
+func (c Catalog) PlanExists(planCode string) bool {
+	for _, plan := range c.Plans {
+		if plan.PlanCode == planCode {
+			return true
+		}
+	}
+
+	return false
+}
