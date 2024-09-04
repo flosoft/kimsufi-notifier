@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/TheoBrigitte/kimsufi-notifier/pkg/kimsufi"
-	"github.com/TheoBrigitte/kimsufi-notifier/pkg/sms"
+	"github.com/TheoBrigitte/kimsufi-notifier/pkg/logger"
 )
 
 // Cmd represents the check command
@@ -26,9 +26,7 @@ var (
 	datacenters []string
 	planCode    string
 
-	country   string
-	hardware  string
-	checkOnly bool
+	logLevel string
 )
 
 const (
@@ -37,15 +35,19 @@ const (
 )
 
 func init() {
-	Cmd.PersistentFlags().StringSliceVarP(&datacenters, "datacenters", "d", []string{"fr"}, "datacenter comma separated list")
-	Cmd.PersistentFlags().StringVarP(&planCode, "planCode", "p", "", "plan code name (e.g. 1801sk143)")
+	Cmd.PersistentFlags().StringSliceVarP(&datacenters, "datacenters", "d", nil, fmt.Sprintf("comma separated list of datacenters to check (allowed values: %s)", strings.Join(kimsufi.AllowedDatacenters, ", ")))
+	Cmd.PersistentFlags().StringVarP(&planCode, "plan-code", "p", "", fmt.Sprintf("plan code name (e.g. %s)", kimsufi.PlanCodeExample))
+	Cmd.PersistentFlags().StringVarP(&logLevel, "log-level", "l", "error", fmt.Sprintf("log level (allowed values: %s)", strings.Join(logger.AllowedLevelsString(), ", ")))
 
-	Cmd.PersistentFlags().StringVarP(&country, "country", "c", "", "country code (e.g. fr)")
-	Cmd.PersistentFlags().StringVarP(&hardware, "hardware", "w", "", "harware code name (e.g. 1801sk143)")
-	Cmd.PersistentFlags().BoolVarP(&checkOnly, "check-only", "o", true, "run check only (no sms)")
 }
 
 func runner(cmd *cobra.Command, args []string) error {
+	level, err := log.ParseLevel(logLevel)
+	if err != nil {
+		log.Fatalf("failed to parse log-level: %v\n", err)
+	}
+
+	log.SetLevel(level)
 	d := kimsufi.Config{
 		URL:    kimsufiAPI,
 		Logger: log.StandardLogger(),
@@ -55,12 +57,24 @@ func runner(cmd *cobra.Command, args []string) error {
 		log.Fatalf("error: %v\n", err)
 	}
 
+	if planCode == "" {
+		log.Fatalf("plan code is required\n")
+	}
+
 	a, err := k.GetAvailabilities(datacenters, planCode)
-	if kimsufi.IsNotAvailableError(err) {
-		log.Printf("%s is not available in %s\n", hardware, country)
-		os.Exit(0)
-	} else if err != nil {
-		log.Fatalf("error: %v\n", err)
+	if err != nil {
+		if kimsufi.IsNotAvailableError(err) {
+			datacenterMessage := ""
+			if len(datacenters) > 0 {
+				datacenterMessage = strings.Join(datacenters, ", ")
+			} else {
+				datacenterMessage = "all datacenters"
+			}
+			log.Printf("%s is not available in %s\n", planCode, datacenterMessage)
+			return nil
+		} else {
+			log.Fatalf("error: %v\n", err)
+		}
 	}
 
 	formatter := kimsufi.DatacenterFormatter(kimsufi.IsDatacenterAvailable, kimsufi.DatacenterKey)
@@ -89,28 +103,6 @@ func runner(cmd *cobra.Command, args []string) error {
 	//		fmt.Printf("%s is not available\n", availability.PlanCode)
 	//	}
 	//}
-
-	if checkOnly {
-		os.Exit(0)
-	}
-
-	c := sms.Config{
-		URL:    smsAPI,
-		Logger: log.StandardLogger(),
-		User:   "",
-		Pass:   "",
-	}
-
-	s, err := sms.NewService(c)
-	if err != nil {
-		log.Fatalf("error: %v\n", err)
-	}
-
-	err = s.SendMessage("")
-	if err != nil {
-		log.Fatalf("error: %v\n", err)
-	}
-	log.Printf("message sent\n")
 
 	return nil
 }
