@@ -12,7 +12,7 @@ import (
 
 type Config struct {
 	URL    string
-	Logger logrus.StdLogger
+	Logger *logrus.Logger
 }
 
 type Service struct {
@@ -72,10 +72,10 @@ func (s *Service) ListServers(ovhSubsidiary string) (*Catalog, error) {
 }
 
 type Logger struct {
-	logger logrus.StdLogger
+	logger *logrus.Logger
 }
 
-func NewRequestLogger(l logrus.StdLogger) *Logger {
+func NewRequestLogger(l *logrus.Logger) *Logger {
 	logger := &Logger{
 		logger: l,
 	}
@@ -84,9 +84,9 @@ func NewRequestLogger(l logrus.StdLogger) *Logger {
 }
 
 func (l *Logger) LogRequest(r *http.Request) {
-	l.logger.Printf("kimsufi: %s %s %s %v\n", r.Method, r.URL.String(), r.Proto, r.Header)
+	l.logger.Debugf("kimsufi: %s %s %s %v\n", r.Method, r.URL.String(), r.Proto, r.Header)
 }
 
 func (l *Logger) LogResponse(r *http.Response) {
-	l.logger.Printf("kimsufi: %s %s %v\n", r.Status, r.Proto, r.Header)
+	l.logger.Debugf("kimsufi: %s %s %v\n", r.Status, r.Proto, r.Header)
 }
