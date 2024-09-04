@@ -12,8 +12,12 @@ import (
 	"github.com/TheoBrigitte/kimsufi-notifier/pkg/subscription"
 )
 
+var (
+	subscriptionCheckInterval = 5 * time.Minute
+)
+
 func startSubscriptionCheck(k *kimsufi.Service, s *subscription.Service, b *tele.Bot) {
-	ticker := time.NewTicker(5 * time.Second)
+	ticker := time.NewTicker(subscriptionCheckInterval)
 
 	go func() {
 		for range ticker.C {
