@@ -38,7 +38,7 @@ func init() {
 	Cmd.PersistentFlags().StringVarP(&ovhSubsidiary, "country", "c", "FR", fmt.Sprintf("country code to filter entries (allowed values: %s)", strings.Join(kimsufi.AllowedCountries, ", ")))
 	Cmd.PersistentFlags().StringSliceVarP(&datacenters, "datacenters", "d", nil, fmt.Sprintf("comma separated list of datacenters to check (allowed values: %s)", strings.Join(kimsufi.AllowedDatacenters, ", ")))
 	Cmd.PersistentFlags().StringVarP(&logLevel, "log-level", "l", "error", fmt.Sprintf("log level (allowed values: %s)", strings.Join(logger.AllowedLevelsString(), ", ")))
-	Cmd.PersistentFlags().StringVarP(&planCode, "plan-code", "p", "", "plan code name (e.g. 22sk011)")
+	Cmd.PersistentFlags().StringVarP(&planCode, "plan-code", "p", "", fmt.Sprintf("plan code name (e.g. %s)", kimsufi.PlanCodeExample))
 }
 
 func runner(cmd *cobra.Command, args []string) error {
