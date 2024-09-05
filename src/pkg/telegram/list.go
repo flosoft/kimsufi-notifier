@@ -29,7 +29,7 @@ func (b *Bot) listSelectCountry(c tele.Context) error {
 	}
 
 	m.Inline(m.Split(8, btns)...)
-	return c.Send("Select a country", m)
+	return c.Send("Select a country to list servers from", m)
 }
 
 func (b *Bot) listSelectCategory(c tele.Context, args []string) error {
@@ -52,7 +52,7 @@ func (b *Bot) listSelectCategory(c tele.Context, args []string) error {
 	}
 
 	m.Inline(m.Split(8, btns)...)
-	err := c.Send("Select a category", m)
+	err := c.Send("Select a server category", m)
 	if err != nil {
 		return fmt.Errorf("error sending message: %w", err)
 	}
@@ -123,7 +123,7 @@ func (b *Bot) list(c tele.Context, country, category string) error {
 
 	m.Inline(m.Split(4, btns)...)
 
-	return c.Send("<pre>"+output.String()+"</pre>", m, tele.ModeHTML)
+	return c.Send("<pre>"+output.String()+"</pre>Select which server you want to be notified about", m, tele.ModeHTML)
 }
 
 func (b *Bot) listCommand(k *kimsufi.Service) func(tele.Context) error {

@@ -65,8 +65,7 @@ func NewBot(k *kimsufi.Service, s *subscription.Service) (*Bot, error) {
 		subscriptionService: s,
 	}
 
-	b.Handle(commands["list"].command, bot.listSelectCountry)
-	b.Handle(commands["subscribe"].command, bot.subscribeCommand)
+	b.Handle(commands["subscribe"].command, bot.listSelectCountry)
 
 	b.Handle(tele.OnCallback, func(c tele.Context) error {
 		callback := c.Callback()
