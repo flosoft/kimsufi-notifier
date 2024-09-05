@@ -54,13 +54,12 @@ func helpCommand(c tele.Context) error {
 	output := "Hello,\n"
 	output += "This bot can help you to monitor the availability of Kimsufi servers.\n"
 	output += "\n"
-	output += "You can subscribe to a plan and get notified when it becomes available.\n"
-	output += "You can also list available servers and check their availability.\n"
+	output += "You can subscribe to a plan and get notified when it becomes available with /subscribe command.\n"
+	output += "You can also list available servers and check their availability with /list command.\n"
 	output += "\n"
 	output += "You can use the following commands:\n"
 
 	for _, command := range commands {
-		//output += "<code>" + command + "</code>\n"
 		output += command.command + "  " + command.help + "\n"
 	}
 
@@ -74,8 +73,16 @@ func listCommand(k *kimsufi.Service) func(tele.Context) error {
 
 		args := c.Args()
 		if len(args) < 2 {
-			c.Send("Usage: /list <country> <category>")
-			return nil
+			help := "This command list the available plans / servers for a given country and category.\n"
+			help += "\n"
+			help += "Usage: /list <b>country</b> <b>category</b>\n"
+			help += "-  <b>country</b>  You can get the country code by using the /countries command.\n"
+			help += "-  <b>category</b> You can get the category by using the /categories command.\n"
+			help += "\n"
+			help += "Examples:\n"
+			help += "  <code>/list fr kimsufi</code>\n"
+			help += "  <code>/list de soyoustart</code>\n"
+			return c.Send(help, tele.ModeHTML)
 		}
 
 		country := strings.ToUpper(args[0])
@@ -127,7 +134,16 @@ func checkCommand(k *kimsufi.Service) func(tele.Context) error {
 
 		args := c.Args()
 		if len(args) < 1 {
-			return c.Send("Usage: /check <planCode> [ <datacenter1>,<datacenter2>,... ]")
+			help := "This command checks the availability of a given plan / server in one or more datacenters.\n"
+			help += "\n"
+			help += "Usage: /check <b>planCode</b> <b>datacenter1,datacenter2,...</b>\n"
+			help += "-  <b>planCode</b> You can get the plan code by using the /list command.\n"
+			help += "-  <b>datacenter1,datacenter2,...</b> Optional. You can specify one or more datacenters to check availability. If not specified, the bot will check all datacenters. Valid datacenters are: <code>" + strings.Join(kimsufi.AllowedDatacenters, "</code>, <code>") + "</code>.\n"
+			help += "\n"
+			help += "Examples:\n"
+			help += "  <code>/check 24ska01</code>\n"
+			help += "  <code>/check 24ska01 fra,rbx</code>\n"
+			return c.Send(help, tele.ModeHTML)
 		}
 
 		planCode := args[0]
@@ -177,7 +193,16 @@ func subscribeCommand(k *kimsufi.Service, s *subscription.Service) func(tele.Con
 
 		args := c.Args()
 		if len(args) < 1 {
-			return c.Send("Usage: /subscribe <planCode> [ <datacenter1>,<datacenter2>,... ]")
+			help := "This command subscribes you to a plan / server and notifies you when it becomes available.\n"
+			help += "\n"
+			help += "Usage: /subscribe <b>planCode</b> <b>datacenter1,datacenter2,...</b>\n"
+			help += "-  <b>planCode</b> You can get the plan code by using the /list command.\n"
+			help += "-  <b>datacenter1,datacenter2,...</b> Optional. You can specify one or more datacenters to check availability. If not specified, the bot will check all datacenters. Valid datacenters are: <code>" + strings.Join(kimsufi.AllowedDatacenters, "</code>, <code>") + "</code>.\n"
+			help += "\n"
+			help += "Examples:\n"
+			help += "  <code>/subscribe 24ska01</code>\n"
+			help += "  <code>/subscribe 24ska01 fra,rbx</code>\n"
+			return c.Send(help, tele.ModeHTML)
 		}
 
 		planCode := args[0]
@@ -226,7 +251,14 @@ func unsubscribeCommand(s *subscription.Service) func(tele.Context) error {
 
 		args := c.Args()
 		if len(args) < 1 {
-			return c.Send("Usage: /unsubscribe <subscriptionId>")
+			help := "This command removes a subscription you have created with /subscribe command.\n"
+			help += "\n"
+			help += "Usage: /unsubscribe <b>subscriptionId</b>\n"
+			help += "-  <b>subscriptionId</b> You can get the subscription ID by using the /listsubscriptions command.\n"
+			help += "\n"
+			help += "Examples:\n"
+			help += "  <code>/unsubscribe 1</code>\n"
+			return c.Send(help, tele.ModeHTML)
 		}
 
 		subscriptionId, err := strconv.ParseInt(args[0], 10, 64)
