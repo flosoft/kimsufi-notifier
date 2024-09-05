@@ -64,6 +64,9 @@ func helpCommand(c tele.Context) error {
 		output += command.command + "  " + command.help + "\n"
 	}
 
+	output += "\n"
+	output += "Ask for support or report issues in our Telegram group: https://t.me/+xPnf7KSGEoA1Nzcy\n"
+
 	return c.Send(output, tele.ModeHTML)
 	//return c.Send("Available commands: /help, /subscribe, /unsubscribe, /countries, /datacenters, /plans")
 }
