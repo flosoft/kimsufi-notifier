@@ -12,22 +12,25 @@ import (
 
 func (b *Bot) subscribeSelectDatacenters(c tele.Context, args []string) error {
 	if len(args) < 3 {
-		return fmt.Errorf("missing arguments")
+		log.Errorf("subscribeSelectDatacenters missing arguments args=%d", len(args))
+		return c.Send("Failed to fetch datacenters")
 	}
 	country := args[0]
 	category := args[1]
 	planCode := args[2]
 
-	log.Infof("subscribeSelectDatacenters country=%s category=%s planCode=%s", country, category, planCode)
+	log.Infof("subscribeSelectDatacenters user=%s country=%s category=%s planCode=%s", formatUser(c.Sender()), country, category, planCode)
 
 	catalog, err := b.kimsufiService.ListServers(country)
 	if err != nil {
-		return fmt.Errorf("Failed to list servers: %w", err)
+		log.Errorf("subscribeSelectDatacenters failed to list servers: %v", err)
+		return c.Send("Failed to fetch datacenters")
 	}
 
 	plan := catalog.GetPlan(planCode)
 	if plan == nil {
-		return c.Send("Server not found")
+		log.Errorf("subscribeSelectDatacenters plan not found planCode=%s", planCode)
+		return c.Send("Failed to fetch datacenters")
 	}
 
 	datacenters := plan.GetDatacenters()
@@ -35,7 +38,8 @@ func (b *Bot) subscribeSelectDatacenters(c tele.Context, args []string) error {
 	if len(datacenters) <= 0 {
 		err := b.subscribe(c, planCode, "")
 		if err != nil {
-			return fmt.Errorf("error subscribing: %w", err)
+			log.Errorf("subscribeSelectDatacenters error subscribing: %v", err)
+			return c.Send("Failed to subscribe")
 		}
 		return c.Respond(&tele.CallbackResponse{})
 	}
@@ -52,21 +56,24 @@ func (b *Bot) subscribeSelectDatacenters(c tele.Context, args []string) error {
 	m.Inline(rows...)
 	err = c.Send("Select a datacenter", m)
 	if err != nil {
-		return fmt.Errorf("error sending message: %w", err)
+		log.Errorf("subscribeSelectDatacenters failed to send message: %v", err)
+		return err
 	}
+
 	return c.Respond(&tele.CallbackResponse{})
 }
 
 func (b *Bot) subscribeWrapper(c tele.Context, args []string) error {
 	if len(args) < 4 {
-		return fmt.Errorf("subscribeWrapper: missing arguments %d", len(args))
+		log.Errorf("subscribeWrapper missing arguments args=%d", len(args))
+		return c.Send("Failed to subscribe")
 	}
 	country := args[0]
 	category := args[1]
 	planCode := args[2]
 	datacenters := args[3]
 
-	log.Infof("subscribeWrapper country=%s category=%s planCode=%s datacenters=%s", country, category, planCode, datacenters)
+	log.Infof("subscribeWrapper user=%s country=%s category=%s planCode=%s datacenters=%s", formatUser(c.Sender()), country, category, planCode, datacenters)
 
 	d := ""
 	if datacenters != "any" {
@@ -75,7 +82,8 @@ func (b *Bot) subscribeWrapper(c tele.Context, args []string) error {
 
 	err := b.subscribe(c, planCode, d)
 	if err != nil {
-		return fmt.Errorf("error subscribing: %w", err)
+		log.Errorf("subscribeWrapper error subscribing: %v", err)
+		return c.Send("Failed to subscribe")
 	}
 
 	return c.Respond(&tele.CallbackResponse{})
@@ -92,7 +100,7 @@ func (b *Bot) subscribe(c tele.Context, planCode, datacentersString string) erro
 	_, err := b.kimsufiService.GetAvailabilities(datacenters, planCode)
 	if err != nil {
 		if !kimsufi.IsNotAvailableError(err) {
-			log.Errorf("failed to check availability before subscribing: %w", err)
+			log.Errorf("subscribe: failed to check availability before subscribing: %w", err)
 			return c.Send("Failed to check availability before subscribing")
 		}
 	}
@@ -103,8 +111,8 @@ func (b *Bot) subscribe(c tele.Context, planCode, datacentersString string) erro
 
 	id, err := b.subscriptionService.Subscribe(c.Sender(), planCode, datacenters)
 	if err != nil {
-		log.Errorf("failed to subscribe: %w", err)
-		return fmt.Errorf("Failed to subscribe")
+		log.Errorf("subscribe: failed to subscribe: %v", err)
+		return c.Send("Failed to subscribe")
 	}
 
 	var datacentersMessage string

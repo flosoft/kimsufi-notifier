@@ -31,16 +31,15 @@ func (b *Bot) subscribeCommand(c tele.Context) error {
 
 func (b *Bot) listSelectCategory(c tele.Context, args []string) error {
 	if len(args) < 1 {
-		return fmt.Errorf("missing arguments")
+		log.Errorf("listSelectCategory missing arguments args=%d", len(args))
+		return c.Send("Failed to fetch categories")
 	}
+
 	country := args[0]
 
-	log.Infof("listSelectCategory country=%s", country)
-	//data, _ := parseUniqueData(args[0:2])
-	//country := data
+	log.Info(fmt.Sprintf("listSelectCategory user=%s country=%s", formatUser(c.Sender()), country))
 
 	m := &tele.ReplyMarkup{ResizeKeyboard: true}
-
 	btns := []tele.Btn{}
 	for _, category := range kimsufi.PlanCategories {
 		if category != "" {
@@ -51,7 +50,8 @@ func (b *Bot) listSelectCategory(c tele.Context, args []string) error {
 	m.Inline(m.Split(8, btns)...)
 	err := c.Send("Select a server category", m)
 	if err != nil {
-		return fmt.Errorf("error sending message: %w", err)
+		log.Errorf("listSelectCategory failed to send message: %v", err)
+		return err
 	}
 
 	return c.Respond(&tele.CallbackResponse{})
@@ -59,17 +59,20 @@ func (b *Bot) listSelectCategory(c tele.Context, args []string) error {
 
 func (b *Bot) listWrapper(c tele.Context, args []string) error {
 	if len(args) < 2 {
-		return fmt.Errorf("missing arguments")
+		log.Errorf("listWrapper missing arguments args=%d", len(args))
+		return c.Send("Failed to fetch servers")
 	}
 	country := args[0]
 	category := args[1]
 
-	log.Infof("listWrapper country=%s category=%s", country, category)
+	log.Infof("listWrapper user=%s country=%s category=%s", formatUser(c.Sender()), country, category)
 
 	err := b.list(c, country, category)
 	if err != nil {
-		return fmt.Errorf("error listing servers: %w", err)
+		log.Errorf("listWrapper failed to list servers: %v", err)
+		return c.Send("Failed to fetch servers")
 	}
+
 	return c.Respond(&tele.CallbackResponse{})
 }
 
@@ -84,7 +87,8 @@ func (b *Bot) list(c tele.Context, country, category string) error {
 
 	catalog, err := b.kimsufiService.ListServers(country)
 	if err != nil {
-		return fmt.Errorf("failed to list servers: %w", err)
+		log.Errorf("list: failed to list servers: %v", err)
+		return c.Send("Failed to fetch servers")
 	}
 
 	var output = &bytes.Buffer{}
@@ -117,8 +121,11 @@ func (b *Bot) list(c tele.Context, country, category string) error {
 		btns = append(btns, m.Data(shortName, "listplancode-"+plan.PlanCode, country, category, plan.PlanCode))
 	}
 	w.Flush()
-
 	m.Inline(m.Split(4, btns)...)
+
+	if len(catalog.Plans) == 0 {
+		return c.Send("No servers found")
+	}
 
 	return c.Send("<pre>"+output.String()+"</pre>Select which server you want to be notified about", m, tele.ModeHTML)
 }

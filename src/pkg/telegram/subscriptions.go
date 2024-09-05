@@ -17,15 +17,17 @@ import (
 
 func (b *Bot) unsubscribeWrapper(c tele.Context, args []string) error {
 	if len(args) < 1 {
-		return fmt.Errorf("missing arguments")
+		log.Errorf("unsubscribeWrapper missing arguments args=%d", len(args))
+		return c.Send("Failed to unsubscribe")
 	}
 	subscriptionId := args[0]
 
-	log.Infof("unsubscribeWrapper subscriptionId=%s", subscriptionId)
+	log.Infof("unsubscribeWrapper user=%s subscriptionId=%s", formatUser(c.Sender()), subscriptionId)
 
 	err := b.unsubscribe(c, subscriptionId)
 	if err != nil {
-		return fmt.Errorf("error unsubscribing: %w", err)
+		log.Errorf("unsubscribeWrapper error unsubscribing: %v", err)
+		return c.Send("Failed to unsubscribe")
 	}
 
 	return c.Respond(&tele.CallbackResponse{})
@@ -39,7 +41,7 @@ func (b *Bot) unsubscribe(c tele.Context, id string) error {
 				return c.Send("No subscriptions")
 			}
 
-			log.Errorf("failed to unsubscribe: %w", err)
+			log.Errorf("unsubscribe failed to unsubscribe: %v", err)
 			return c.Send("Failed to unsubscribe")
 		}
 
@@ -48,6 +50,7 @@ func (b *Bot) unsubscribe(c tele.Context, id string) error {
 
 	subscriptionId, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
+		log.Errorf("unsubscribe invalid subscription ID: %v", err)
 		return c.Send("Invalid subscription ID")
 	}
 
@@ -57,7 +60,7 @@ func (b *Bot) unsubscribe(c tele.Context, id string) error {
 			return c.Send("Subscription not found")
 		}
 
-		log.Errorf("failed to unsubscribe: %w", err)
+		log.Errorf("unsubscribe failed to unsubscribe: %v", err)
 		return c.Send("Failed to unsubscribe")
 	}
 
@@ -66,23 +69,25 @@ func (b *Bot) unsubscribe(c tele.Context, id string) error {
 }
 
 func (b *Bot) unsubscribeCommand(c tele.Context) error {
+	log.Info("Handle /unsubscribe command user=" + formatUser(c.Sender()))
+
 	return b.listSubscriptions(c, true)
 }
 
 func (b *Bot) listSubscriptionsCommand(c tele.Context) error {
+	log.Info("Handle /listsubscriptions command user=" + formatUser(c.Sender()))
+
 	return b.listSubscriptions(c, false)
 }
 
 func (b *Bot) listSubscriptions(c tele.Context, showButtons bool) error {
-	log.Info("Handle /listsubscriptions command user=" + formatUser(c.Sender()))
-
 	subscriptions, err := b.subscriptionService.ListUser(c.Sender())
 	if err != nil {
 		if errors.Is(err, subscription.ErrorNotFound) {
 			return c.Send("You have no subscriptions")
 		}
 
-		log.Errorf("failed to list subscriptions: %w", err)
+		log.Errorf("listSubscriptions failed to list subscriptions: %v", err)
 		return c.Send("Failed to list subscriptions")
 	}
 
