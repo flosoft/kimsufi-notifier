@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	subscriptionCheckInterval = 5 * time.Minute
+	subscriptionCheckInterval = 5 * time.Second
 )
 
 func startSubscriptionCheck(k *kimsufi.Service, s *subscription.Service, b *tele.Bot) {
@@ -27,21 +27,34 @@ func startSubscriptionCheck(k *kimsufi.Service, s *subscription.Service, b *tele
 }
 
 func checkSubscriptions(k *kimsufi.Service, s *subscription.Service, b *tele.Bot) error {
-	for _, subscriptions := range s.Subscriptions {
-		for id, subscription := range subscriptions {
-			log.Infof("subscriptioncheck: username=%s subscriptionId=%d check", subscription.User.Username, id)
-			availabilities, err := k.GetAvailabilities(subscription.Datacenters, subscription.PlanCode)
-			if err != nil {
-				log.Errorf("subscriptioncheck: username=%s subscriptionId=%d failed to get availabilities: %v", subscription.User.Username, id, err)
-			}
+	var limit = 100
+	var offset = 0
+	for {
+		subscriptions, _, err := s.ListPaginate("user_id", limit, offset)
+		if err != nil {
+			return err
+		}
 
-			datacenters := availabilities.GetPlanCodeAvailableDatacenters(subscription.PlanCode)
-			if len(datacenters) > 0 {
-				_, err = b.Send(subscription.User, fmt.Sprintf("@%s plan <code>%s</code> is available in <code>%s</code>", subscription.User.Username, subscription.PlanCode, strings.Join(datacenters, "</code>, <code>")), tele.ModeHTML)
+		if len(subscriptions) == 0 {
+			break
+		}
+
+		for _, subscriptions := range subscriptions {
+			for id, subscription := range subscriptions {
+				log.Infof("subscriptioncheck: username=%s subscriptionId=%d check", subscription.User.Username, id)
+				availabilities, err := k.GetAvailabilities(subscription.Datacenters, subscription.PlanCode)
 				if err != nil {
-					log.Errorf("subscriptioncheck: username=%s subscriptionId=%d failed to send message: %v", subscription.User.Username, id, err)
-				} else {
-					s.Unsubscribe(subscription.User, id)
+					log.Errorf("subscriptioncheck: username=%s subscriptionId=%d failed to get availabilities: %v", subscription.User.Username, id, err)
+				}
+
+				datacenters := availabilities.GetPlanCodeAvailableDatacenters(subscription.PlanCode)
+				if len(datacenters) > 0 {
+					_, err = b.Send(subscription.User, fmt.Sprintf("@%s plan <code>%s</code> is available in <code>%s</code>", subscription.User.Username, subscription.PlanCode, strings.Join(datacenters, "</code>, <code>")), tele.ModeHTML)
+					if err != nil {
+						log.Errorf("subscriptioncheck: username=%s subscriptionId=%d failed to send message: %v", subscription.User.Username, id, err)
+					} else {
+						s.Unsubscribe(subscription.User, id)
+					}
 				}
 			}
 		}

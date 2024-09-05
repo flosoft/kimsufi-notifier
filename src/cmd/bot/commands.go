@@ -201,7 +201,10 @@ func subscribeCommand(k *kimsufi.Service, s *subscription.Service) func(tele.Con
 			return c.Send(fmt.Sprintf("Invalid plan code: <code>%s</code>", planCode), tele.ModeHTML)
 		}
 
-		id := s.Subscribe(c.Sender(), planCode, datacenters)
+		id, err := s.Subscribe(c.Sender(), planCode, datacenters)
+		if err != nil {
+			return fmt.Errorf("failed to subscribe: %w", err)
+		}
 
 		var datacentersMessage string
 		if len(datacenters) > 1 {
@@ -225,12 +228,15 @@ func unsubscribeCommand(s *subscription.Service) func(tele.Context) error {
 			return c.Send("Usage: /unsubscribe <subscriptionId>")
 		}
 
-		subscriptionId, err := strconv.Atoi(args[0])
+		subscriptionId, err := strconv.ParseInt(args[0], 10, 64)
 		if err != nil {
 			return c.Send("Invalid subscription ID")
 		}
 
-		s.Unsubscribe(c.Sender(), subscriptionId)
+		err = s.Unsubscribe(c.Sender(), subscriptionId)
+		if err != nil {
+			return fmt.Errorf("failed to unsubscribe: %w", err)
+		}
 
 		return c.Send(fmt.Sprintf("You unsubscribed from subscription <code>%d</code>", subscriptionId), tele.ModeHTML)
 	}
@@ -240,7 +246,10 @@ func listSubscriptionsCommand(s *subscription.Service) func(tele.Context) error 
 	return func(c tele.Context) error {
 		log.Info("Handle /listsubscriptions command  username=" + c.Sender().Username)
 
-		subscriptions := s.List(c.Sender())
+		subscriptions, err := s.ListUser(c.Sender())
+		if err != nil {
+			return fmt.Errorf("failed to list subscriptions: %w", err)
+		}
 
 		var output = &bytes.Buffer{}
 		w := tabwriter.NewWriter(output, 0, 0, 4, ' ', 0)

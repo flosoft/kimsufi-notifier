@@ -77,7 +77,10 @@ func runner(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to initialize kimsufi service: %w", err)
 	}
 
-	s := subscription.NewService()
+	s, err := subscription.NewService()
+	if err != nil {
+		return fmt.Errorf("failed to initialize subscription service: %w", err)
+	}
 
 	telegramBot, err := telegram.NewBot()
 	if err != nil {

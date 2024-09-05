@@ -11,42 +11,58 @@ type Subscription struct {
 }
 
 type Service struct {
-	Subscriptions map[int64]map[int]Subscription
+	Database *Database
 }
 
-func NewService() *Service {
-	s := &Service{}
-	s.Subscriptions = make(map[int64]map[int]Subscription)
+func NewService() (s *Service, err error) {
+	s = &Service{}
 
-	return s
-}
-
-func (s *Service) Subscribe(telegramUser *tele.User, planCode string, datacenters []string) int {
-	if _, ok := s.Subscriptions[telegramUser.ID]; !ok {
-		s.Subscriptions[telegramUser.ID] = make(map[int]Subscription)
+	s.Database, err = NewDatabase("subscriptions.sqlite")
+	if err != nil {
+		return nil, err
 	}
 
-	s.Subscriptions[telegramUser.ID][len(s.Subscriptions[telegramUser.ID])] = Subscription{
+	return s, nil
+}
+
+func (s *Service) Subscribe(telegramUser *tele.User, planCode string, datacenters []string) (int64, error) {
+	subscription := Subscription{
 		PlanCode:    planCode,
 		Datacenters: datacenters,
 		User:        telegramUser,
 	}
 
-	return len(s.Subscriptions[telegramUser.ID]) - 1
-}
-
-func (s *Service) Unsubscribe(telegramUser *tele.User, subscriptionId int) {
-	if _, ok := s.Subscriptions[telegramUser.ID]; !ok {
-		return
+	id, err := s.Database.Insert(subscription)
+	if err != nil {
+		return -1, err
 	}
 
-	delete(s.Subscriptions[telegramUser.ID], subscriptionId)
+	return id, nil
 }
 
-func (s *Service) List(telegramUser *tele.User) map[int]Subscription {
-	if _, ok := s.Subscriptions[telegramUser.ID]; !ok {
-		return nil
+func (s *Service) Unsubscribe(telegramUser *tele.User, subscriptionId int64) error {
+	err := s.Database.Delete(subscriptionId, telegramUser.ID)
+	if err != nil {
+		return err
 	}
 
-	return s.Subscriptions[telegramUser.ID]
+	return nil
+}
+
+func (s *Service) ListUser(telegramUser *tele.User) (map[int64]Subscription, error) {
+	subscriptions, err := s.Database.QueryUser(telegramUser.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return subscriptions, nil
+}
+
+func (s *Service) ListPaginate(sortBy string, limit, offset int) (map[int64]map[int64]Subscription, int, error) {
+	subscriptions, count, err := s.Database.QueryList(sortBy, limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return subscriptions, count, nil
 }
