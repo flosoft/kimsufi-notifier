@@ -5,7 +5,6 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	tele "gopkg.in/telebot.v3"
 
 	"github.com/TheoBrigitte/kimsufi-notifier/cmd/flag"
 	"github.com/TheoBrigitte/kimsufi-notifier/pkg/kimsufi"
@@ -27,34 +26,6 @@ func init() {
 	Cmd.PersistentFlags().StringVarP(&databaseFilename, "database-filename", "d", "kimsufi-notifier.sqlite3", "filename of the SQLite database")
 }
 
-var (
-	commands = map[string]struct {
-		command string
-		help    string
-	}{
-		"help": {
-			"/help",
-			"Show this help",
-		},
-		"subscribe": {
-			"/subscribe",
-			"Get notified when a server becomes available",
-		},
-		"unsubscribe": {
-			"/unsubscribe",
-			"Unsubscribe from a notification",
-		},
-		"listsubscriptions": {
-			"/listsubscriptions",
-			"List active subscriptions",
-		},
-		"hello": {
-			"/hello",
-			"Send a test notification",
-		},
-	}
-)
-
 func runner(cmd *cobra.Command, args []string) error {
 	d := kimsufi.Config{
 		URL:    kimsufi.GetOVHEndpoint(cmd.Flag(flag.OVHAPIEndpointFlagName).Value.String()),
@@ -74,9 +45,6 @@ func runner(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("failed to initialize telegram bot: %w", err)
 	}
-
-	telegramBot.Handle(commands["help"].command, helpCommand)
-	telegramBot.Handle(tele.OnText, helpCommand)
 
 	startSubscriptionCheck(k, s, telegramBot.Bot)
 

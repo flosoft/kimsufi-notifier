@@ -9,22 +9,6 @@ var (
 			"/help",
 			"Show this help",
 		},
-		"categories": {
-			"/categories",
-			"List available categories",
-		},
-		"countries": {
-			"/countries",
-			"List available countries",
-		},
-		"list": {
-			"/list",
-			"List available plans / servers",
-		},
-		"check": {
-			"/check",
-			"Check availability of a plan",
-		},
 		"subscribe": {
 			"/subscribe",
 			"Get notified when a server becomes available",
@@ -36,6 +20,10 @@ var (
 		"listsubscriptions": {
 			"/listsubscriptions",
 			"List active subscriptions",
+		},
+		"hello": {
+			"/hello",
+			"Send a test notification",
 		},
 	}
 )

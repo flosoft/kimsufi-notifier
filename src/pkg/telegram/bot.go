@@ -44,6 +44,8 @@ func NewBot(k *kimsufi.Service, s *subscription.Service) (*Bot, error) {
 		subscriptionService: s,
 	}
 
+	b.Handle(tele.OnText, helpCommand)
+	b.Handle(commands["help"].command, helpCommand)
 	b.Handle(commands["subscribe"].command, bot.subscribeCommand)
 	b.Handle(commands["unsubscribe"].command, bot.unsubscribeCommand)
 	b.Handle(commands["listsubscriptions"].command, bot.listSubscriptionsCommand)

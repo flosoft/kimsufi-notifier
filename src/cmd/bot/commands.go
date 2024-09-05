@@ -42,28 +42,6 @@ func countriesCommand(c tele.Context) error {
 	return c.Send(output, tele.ModeHTML)
 }
 
-func helpCommand(c tele.Context) error {
-	log.Info("Handle /help command user=" + formatUser(c.Sender()))
-
-	output := "Hello,\n"
-	output += "This bot can help you to monitor the availability of Kimsufi servers.\n"
-	output += "\n"
-	output += "You can subscribe to a plan and get notified when it becomes available with /subscribe command.\n"
-	output += "You can also list your current subscriptions /listsubscriptions command.\n"
-	output += "\n"
-	output += "You can use the following commands:\n"
-
-	for _, command := range commands {
-		output += command.command + "  " + command.help + "\n"
-	}
-
-	output += "\n"
-	output += "Ask for support or report issues in our Telegram group: https://t.me/+xPnf7KSGEoA1Nzcy\n"
-
-	return c.Send(output, tele.ModeHTML)
-	//return c.Send("Available commands: /help, /subscribe, /unsubscribe, /countries, /datacenters, /plans")
-}
-
 func checkCommand(k *kimsufi.Service) func(tele.Context) error {
 	return func(c tele.Context) error {
 		args := c.Args()
