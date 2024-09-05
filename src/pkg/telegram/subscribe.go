@@ -2,7 +2,6 @@ package telegram
 
 import (
 	"fmt"
-	"slices"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -88,11 +87,6 @@ func (b *Bot) subscribe(c tele.Context, planCode, datacentersString string) erro
 	datacenters := []string{}
 	if len(datacentersString) > 0 {
 		datacenters = strings.Split(datacentersString, ",")
-		for _, datacenter := range datacenters {
-			if !slices.Contains(kimsufi.AllowedDatacenters, datacenter) {
-				return c.Send(fmt.Sprintf("Invalid datacenter: <code>%s</code>", datacenter), tele.ModeHTML)
-			}
-		}
 	}
 
 	_, err := b.kimsufiService.GetAvailabilities(datacenters, planCode)
