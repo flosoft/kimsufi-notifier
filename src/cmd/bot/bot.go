@@ -36,22 +36,6 @@ var (
 			"/help",
 			"Show this help",
 		},
-		"categories": {
-			"/categories",
-			"List available categories",
-		},
-		"countries": {
-			"/countries",
-			"List available countries",
-		},
-		"list": {
-			"/list",
-			"List available plans / servers",
-		},
-		"check": {
-			"/check",
-			"Check availability of a plan",
-		},
 		"subscribe": {
 			"/subscribe",
 			"Get notified when a server becomes available",
@@ -88,9 +72,6 @@ func runner(cmd *cobra.Command, args []string) error {
 	}
 
 	telegramBot.Handle(commands["help"].command, helpCommand)
-	telegramBot.Handle(commands["categories"].command, categoriesCommand)
-	telegramBot.Handle(commands["countries"].command, countriesCommand)
-	telegramBot.Handle(commands["check"].command, checkCommand(k))
 	telegramBot.Handle(tele.OnText, helpCommand)
 
 	startSubscriptionCheck(k, s, telegramBot.Bot)
