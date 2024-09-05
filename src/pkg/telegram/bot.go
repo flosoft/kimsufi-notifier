@@ -38,29 +38,6 @@ func NewBot(k *kimsufi.Service, s *subscription.Service) (*Bot, error) {
 		return c.Send("Test notification! @" + username)
 	})
 
-	b.Handle("/unsubscribe", func(c tele.Context) error {
-		username := c.Sender().Username
-		fmt.Printf("payload: %s\n", c.Message().Payload)
-		var subscriptionId int
-		n, err := fmt.Sscan(c.Message().Payload, &subscriptionId)
-		if err != nil {
-			fmt.Println("Invalid command")
-			return err
-		}
-
-		fmt.Printf("scanned %d variables: %d\n", n, subscriptionId)
-
-		return c.Send(fmt.Sprintf("@%s you unsubscribed from subscription %d", username, subscriptionId))
-	})
-
-	b.Handle("/countries", func(c tele.Context) error {
-		return c.Send(fmt.Sprintf("Allowed countries: %s", strings.Join(kimsufi.AllowedCountries, ", ")))
-	})
-
-	b.Handle("/datacenters", func(c tele.Context) error {
-		return c.Send(fmt.Sprintf("Allowed datacenters: %s", strings.Join(kimsufi.AllowedDatacenters, ", ")))
-	})
-
 	bot := &Bot{
 		Bot:                 b,
 		kimsufiService:      k,
