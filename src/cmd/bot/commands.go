@@ -20,7 +20,7 @@ import (
 )
 
 func categoriesCommand(c tele.Context) error {
-	log.Info("Handle /categories command  username=" + c.Sender().Username)
+	log.Info("Handle /categories command user=" + formatUser(c.Sender()))
 
 	categories := kimsufi.PlanCategories
 
@@ -35,7 +35,7 @@ func categoriesCommand(c tele.Context) error {
 }
 
 func countriesCommand(c tele.Context) error {
-	log.Info("Handle /countries command  username=" + c.Sender().Username)
+	log.Info("Handle /countries command user=" + formatUser(c.Sender()))
 
 	countries := kimsufi.AllowedCountries
 
@@ -50,7 +50,7 @@ func countriesCommand(c tele.Context) error {
 }
 
 func helpCommand(c tele.Context) error {
-	log.Info("Handle /help command  username=" + c.Sender().Username)
+	log.Info("Handle /help command user=" + formatUser(c.Sender()))
 
 	output := "Hello,\n"
 	output += "This bot can help you to monitor the availability of Kimsufi servers.\n"
@@ -75,7 +75,7 @@ func listCommand(k *kimsufi.Service) func(tele.Context) error {
 	return func(c tele.Context) error {
 		args := c.Args()
 
-		log.Info(fmt.Sprintf("Handle /list command username=%s args=%v", c.Sender().Username, args))
+		log.Info(fmt.Sprintf("Handle /list command user=%s args=%v", formatUser(c.Sender()), args))
 
 		if len(args) < 2 {
 			help := "This command list the available plans / servers for a given country and category.\n"
@@ -137,7 +137,7 @@ func checkCommand(k *kimsufi.Service) func(tele.Context) error {
 	return func(c tele.Context) error {
 		args := c.Args()
 
-		log.Info(fmt.Sprintf("Handle /check command username=%s args=%v", c.Sender().Username, args))
+		log.Info(fmt.Sprintf("Handle /check command user=%s args=%v", formatUser(c.Sender()), args))
 
 		if len(args) < 1 {
 			help := "This command checks the availability of a given plan / server in one or more datacenters.\n"
@@ -197,7 +197,7 @@ func subscribeCommand(k *kimsufi.Service, s *subscription.Service) func(tele.Con
 	return func(c tele.Context) error {
 		args := c.Args()
 
-		log.Info(fmt.Sprintf("Handle /subscribe command username=%s args=%v", c.Sender().Username, args))
+		log.Info(fmt.Sprintf("Handle /subscribe command user=%s args=%v", formatUser(c.Sender()), args))
 
 		if len(args) < 1 {
 			help := "This command subscribes you to a plan / server and notifies you when it becomes available.\n"
@@ -258,7 +258,7 @@ func unsubscribeCommand(s *subscription.Service) func(tele.Context) error {
 	return func(c tele.Context) error {
 		args := c.Args()
 
-		log.Info(fmt.Sprintf("Handle /unsubscribe command  username=%s args=%v", c.Sender().Username, args))
+		log.Info(fmt.Sprintf("Handle /unsubscribe command user=%s args=%v", formatUser(c.Sender()), args))
 
 		if len(args) < 1 {
 			help := "This command removes a subscription you have created with /subscribe command.\n"
@@ -292,7 +292,7 @@ func unsubscribeCommand(s *subscription.Service) func(tele.Context) error {
 
 func listSubscriptionsCommand(s *subscription.Service) func(tele.Context) error {
 	return func(c tele.Context) error {
-		log.Info("Handle /listsubscriptions command  username=" + c.Sender().Username)
+		log.Info("Handle /listsubscriptions command user=" + formatUser(c.Sender()))
 
 		subscriptions, err := s.ListUser(c.Sender())
 		if err != nil {
@@ -316,4 +316,8 @@ func listSubscriptionsCommand(s *subscription.Service) func(tele.Context) error 
 
 		return c.Send("<pre>"+output.String()+"</pre>", tele.ModeHTML)
 	}
+}
+
+func formatUser(user *tele.User) string {
+	return fmt.Sprintf("%s %s (@%s)", user.FirstName, user.LastName, user.Username)
 }
