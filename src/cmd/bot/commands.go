@@ -69,9 +69,10 @@ func helpCommand(c tele.Context) error {
 
 func listCommand(k *kimsufi.Service) func(tele.Context) error {
 	return func(c tele.Context) error {
-		log.Info("Handle /list command  username=" + c.Sender().Username)
-
 		args := c.Args()
+
+		log.Info(fmt.Sprintf("Handle /list command username=%s args=%v", c.Sender().Username, args))
+
 		if len(args) < 2 {
 			help := "This command list the available plans / servers for a given country and category.\n"
 			help += "\n"
@@ -130,9 +131,10 @@ func listCommand(k *kimsufi.Service) func(tele.Context) error {
 
 func checkCommand(k *kimsufi.Service) func(tele.Context) error {
 	return func(c tele.Context) error {
-		log.Info("Handle /check command  username=" + c.Sender().Username)
-
 		args := c.Args()
+
+		log.Info(fmt.Sprintf("Handle /check command username=%s args=%v", c.Sender().Username, args))
+
 		if len(args) < 1 {
 			help := "This command checks the availability of a given plan / server in one or more datacenters.\n"
 			help += "\n"
@@ -189,9 +191,10 @@ func checkCommand(k *kimsufi.Service) func(tele.Context) error {
 }
 func subscribeCommand(k *kimsufi.Service, s *subscription.Service) func(tele.Context) error {
 	return func(c tele.Context) error {
-		log.Info("Handle /subscribe command  username=" + c.Sender().Username)
-
 		args := c.Args()
+
+		log.Info(fmt.Sprintf("Handle /subscribe command username=%s args=%v", c.Sender().Username, args))
+
 		if len(args) < 1 {
 			help := "This command subscribes you to a plan / server and notifies you when it becomes available.\n"
 			help += "\n"
@@ -247,9 +250,10 @@ func subscribeCommand(k *kimsufi.Service, s *subscription.Service) func(tele.Con
 
 func unsubscribeCommand(s *subscription.Service) func(tele.Context) error {
 	return func(c tele.Context) error {
-		log.Info("Handle /unsubscribe command  username=" + c.Sender().Username)
-
 		args := c.Args()
+
+		log.Info(fmt.Sprintf("Handle /unsubscribe command  username=%s args=%v", c.Sender().Username, args))
+
 		if len(args) < 1 {
 			help := "This command removes a subscription you have created with /subscribe command.\n"
 			help += "\n"
