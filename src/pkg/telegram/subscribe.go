@@ -34,7 +34,6 @@ func (b *Bot) subscribeSelectDatacenters(c tele.Context, args []string) error {
 	}
 
 	datacenters := plan.GetDatacenters()
-	log.Infof("planCode=%s config=%d datacenters=%v", plan.PlanCode, len(plan.Configurations), datacenters)
 	if len(datacenters) <= 0 {
 		err := b.subscribe(c, planCode, "")
 		if err != nil {
@@ -90,8 +89,6 @@ func (b *Bot) subscribeWrapper(c tele.Context, args []string) error {
 }
 
 func (b *Bot) subscribe(c tele.Context, planCode, datacentersString string) error {
-	log.Infof("subscribe planCode=%s datacenters=%s", planCode, datacentersString)
-
 	datacenters := []string{}
 	if len(datacentersString) > 0 {
 		datacenters = strings.Split(datacentersString, ",")
