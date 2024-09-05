@@ -2,18 +2,14 @@ package bot
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 	"text/tabwriter"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 	tele "gopkg.in/telebot.v3"
 
 	"github.com/TheoBrigitte/kimsufi-notifier/pkg/kimsufi"
-	"github.com/TheoBrigitte/kimsufi-notifier/pkg/subscription"
 )
 
 func categoriesCommand(c tele.Context) error {
@@ -122,70 +118,6 @@ func checkCommand(k *kimsufi.Service) func(tele.Context) error {
 				status = "unavailable"
 			}
 			fmt.Fprintf(w, "%s\t%s\t%s\n", k, status, strings.Join(v, ", "))
-		}
-		w.Flush()
-
-		return c.Send("<pre>"+output.String()+"</pre>", tele.ModeHTML)
-	}
-}
-
-func unsubscribeCommand(s *subscription.Service) func(tele.Context) error {
-	return func(c tele.Context) error {
-		args := c.Args()
-
-		log.Info(fmt.Sprintf("Handle /unsubscribe command user=%s args=%v", formatUser(c.Sender()), args))
-
-		if len(args) < 1 {
-			help := "This command removes a subscription you have created with /subscribe command.\n"
-			help += "\n"
-			help += "Usage: /unsubscribe <b>subscriptionId</b>\n"
-			help += "-  <b>subscriptionId</b> You can get the subscription ID by using the /listsubscriptions command.\n"
-			help += "\n"
-			help += "Examples:\n"
-			help += "  <code>/unsubscribe 1</code>\n"
-			return c.Send(help, tele.ModeHTML)
-		}
-
-		subscriptionId, err := strconv.ParseInt(args[0], 10, 64)
-		if err != nil {
-			return c.Send("Invalid subscription ID")
-		}
-
-		err = s.Unsubscribe(c.Sender(), subscriptionId)
-		if err != nil {
-			if errors.Is(err, subscription.ErrorNotFound) {
-				return c.Send("Subscription not found")
-			}
-
-			log.Errorf("failed to unsubscribe: %w", err)
-			return c.Send("Failed to unsubscribe")
-		}
-
-		return c.Send(fmt.Sprintf("You unsubscribed from subscription <code>%d</code>", subscriptionId), tele.ModeHTML)
-	}
-}
-
-func listSubscriptionsCommand(s *subscription.Service) func(tele.Context) error {
-	return func(c tele.Context) error {
-		log.Info("Handle /listsubscriptions command user=" + formatUser(c.Sender()))
-
-		subscriptions, err := s.ListUser(c.Sender())
-		if err != nil {
-			if errors.Is(err, subscription.ErrorNotFound) {
-				return c.Send("You have no subscriptions")
-			}
-
-			log.Errorf("failed to list subscriptions: %w", err)
-			return c.Send("Failed to list subscriptions")
-		}
-
-		var output = &bytes.Buffer{}
-		w := tabwriter.NewWriter(output, 0, 0, 4, ' ', 0)
-		fmt.Fprintln(w, "subscriptionId\tplanCode\tdatacenters\tlast_check")
-		fmt.Fprintln(w, "--------------\t--------\t-----------\t----------")
-
-		for k, v := range subscriptions {
-			fmt.Fprintf(w, "%d\t%s\t%s\t%s\n", k, v.PlanCode, strings.Join(v.Datacenters, ", "), v.LastCheck.Format(time.RFC1123))
 		}
 		w.Flush()
 

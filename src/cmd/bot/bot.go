@@ -91,8 +91,6 @@ func runner(cmd *cobra.Command, args []string) error {
 	telegramBot.Handle(commands["categories"].command, categoriesCommand)
 	telegramBot.Handle(commands["countries"].command, countriesCommand)
 	telegramBot.Handle(commands["check"].command, checkCommand(k))
-	telegramBot.Handle(commands["unsubscribe"].command, unsubscribeCommand(s))
-	telegramBot.Handle(commands["listsubscriptions"].command, listSubscriptionsCommand(s))
 	telegramBot.Handle(tele.OnText, helpCommand)
 
 	startSubscriptionCheck(k, s, telegramBot.Bot)

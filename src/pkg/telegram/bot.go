@@ -66,6 +66,8 @@ func NewBot(k *kimsufi.Service, s *subscription.Service) (*Bot, error) {
 	}
 
 	b.Handle(commands["subscribe"].command, bot.listSelectCountry)
+	b.Handle(commands["unsubscribe"].command, bot.unsubscribeCommand)
+	b.Handle(commands["listsubscriptions"].command, bot.listSubscriptionsCommand)
 
 	b.Handle(tele.OnCallback, func(c tele.Context) error {
 		callback := c.Callback()
@@ -83,6 +85,8 @@ func NewBot(k *kimsufi.Service, s *subscription.Service) (*Bot, error) {
 			return bot.subscribeSelectDatacenters(c, data)
 		case "subscribedatacenters":
 			return bot.subscribeWrapper(c, data)
+		case "unsubscribe":
+			return bot.unsubscribeWrapper(c, data)
 		}
 
 		return c.Respond(&tele.CallbackResponse{})
