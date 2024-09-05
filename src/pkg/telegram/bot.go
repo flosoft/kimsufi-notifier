@@ -31,9 +31,11 @@ func NewBot(k *kimsufi.Service, s *subscription.Service) (*Bot, error) {
 	}
 
 	b.Handle("/hello", func(c tele.Context) error {
+		log.Info(fmt.Sprintf("Handle /hello command user=%s", formatUser(c.Sender())))
+
 		username := c.Sender().Username
 
-		return c.Send("Hello! @" + username)
+		return c.Send("Test notification! @" + username)
 	})
 
 	b.Handle("/unsubscribe", func(c tele.Context) error {

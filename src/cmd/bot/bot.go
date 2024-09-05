@@ -48,6 +48,10 @@ var (
 			"/listsubscriptions",
 			"List active subscriptions",
 		},
+		"hello": {
+			"/hello",
+			"Send a test notification",
+		},
 	}
 )
 
