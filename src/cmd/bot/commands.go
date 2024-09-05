@@ -2,6 +2,7 @@ package bot
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"reflect"
 	"slices"
@@ -223,7 +224,8 @@ func subscribeCommand(k *kimsufi.Service, s *subscription.Service) func(tele.Con
 		availabilities, err := k.GetAvailabilities(datacenters, planCode)
 		if err != nil {
 			if !kimsufi.IsNotAvailableError(err) {
-				return fmt.Errorf("failed to get subscribe: %w", err)
+				log.Errorf("failed to check availability before subscribing: %w", err)
+				return c.Send("Failed to check availability before subscribing")
 			}
 		}
 		if len(*availabilities) <= 0 {
@@ -232,7 +234,8 @@ func subscribeCommand(k *kimsufi.Service, s *subscription.Service) func(tele.Con
 
 		id, err := s.Subscribe(c.Sender(), planCode, datacenters)
 		if err != nil {
-			return fmt.Errorf("failed to subscribe: %w", err)
+			log.Errorf("failed to subscribe: %w", err)
+			return fmt.Errorf("Failed to subscribe")
 		}
 
 		var datacentersMessage string
@@ -272,7 +275,12 @@ func unsubscribeCommand(s *subscription.Service) func(tele.Context) error {
 
 		err = s.Unsubscribe(c.Sender(), subscriptionId)
 		if err != nil {
-			return fmt.Errorf("failed to unsubscribe: %w", err)
+			if errors.Is(err, subscription.ErrorNotFound) {
+				return c.Send("Subscription not found")
+			}
+
+			log.Errorf("failed to unsubscribe: %w", err)
+			return c.Send("Failed to unsubscribe")
 		}
 
 		return c.Send(fmt.Sprintf("You unsubscribed from subscription <code>%d</code>", subscriptionId), tele.ModeHTML)
@@ -285,7 +293,12 @@ func listSubscriptionsCommand(s *subscription.Service) func(tele.Context) error 
 
 		subscriptions, err := s.ListUser(c.Sender())
 		if err != nil {
-			return fmt.Errorf("failed to list subscriptions: %w", err)
+			if errors.Is(err, subscription.ErrorNotFound) {
+				return c.Send("You have no subscriptions")
+			}
+
+			log.Errorf("failed to list subscriptions: %w", err)
+			return c.Send("Failed to list subscriptions")
 		}
 
 		var output = &bytes.Buffer{}

@@ -101,6 +101,10 @@ func (db Database) Query(id int64, user_id int64) (*Subscription, error) {
 func (db Database) QueryUser(user_id int64) (map[int64]Subscription, error) {
 	rows, err := db.DB.Query(selectUserQuery, user_id)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("%w %w", ErrorNotFound, err)
+		}
+
 		return nil, err
 	}
 	defer rows.Close()
@@ -145,6 +149,9 @@ func (db Database) QueryList(sortBy string, limit, offset int) (map[int64]map[in
 
 	rows, err := db.DB.Query(dbQuery, limit, offset)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, 0, fmt.Errorf("%w %w", ErrorNotFound, err)
+		}
 		return nil, 0, err
 	}
 	defer rows.Close()
@@ -189,10 +196,20 @@ func (db Database) QueryList(sortBy string, limit, offset int) (map[int64]map[in
 }
 
 func (db Database) Delete(id int64, user_id int64) error {
-	_, err := db.DB.Exec(deleteQuery, id, user_id)
+	r, err := db.DB.Exec(deleteQuery, id, user_id)
 	if err != nil {
 		return err
 	}
+
+	rowsAffected, err := r.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("%w %w", ErrorNotFound, errors.New("no rows affected"))
+	}
+
 	return nil
 }
 
