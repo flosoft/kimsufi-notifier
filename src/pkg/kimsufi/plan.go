@@ -15,10 +15,10 @@ type Plan struct {
 	Product       string            `json:"product"`
 	PricingType   string            `json:"pricingType"`
 	//ConsumptionConfiguration string          `json:"consumptionConfiguration"`
-	Pricings      []Pricing           `json:"pricings"`
-	Configuration []PlanConfiguration `json:"configuration"`
-	Family        string              `json:"family"`
-	Blobs         PlanBlobs           `json:"blobs,omitempty"`
+	Pricings       []Pricing           `json:"pricings"`
+	Configurations []PlanConfiguration `json:"configurations"`
+	Family         string              `json:"family"`
+	Blobs          PlanBlobs           `json:"blobs,omitempty"`
 }
 
 type PlanAddonFamily struct {

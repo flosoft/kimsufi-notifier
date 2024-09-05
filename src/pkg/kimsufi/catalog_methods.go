@@ -27,6 +27,16 @@ func (p Plan) FirstPrice() Pricing {
 	return p.Pricings[0]
 }
 
+func (c Catalog) GetPlan(planCode string) *Plan {
+	for _, plan := range c.Plans {
+		if plan.PlanCode == planCode {
+			return &plan
+		}
+	}
+
+	return nil
+}
+
 func (c Catalog) PlanExists(planCode string) bool {
 	for _, plan := range c.Plans {
 		if plan.PlanCode == planCode {
@@ -35,4 +45,14 @@ func (c Catalog) PlanExists(planCode string) bool {
 	}
 
 	return false
+}
+
+func (p Plan) GetDatacenters() []string {
+	for _, config := range p.Configurations {
+		if config.Name == "dedicated_datacenter" {
+			return config.Values
+		}
+	}
+
+	return nil
 }

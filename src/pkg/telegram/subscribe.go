@@ -21,17 +21,37 @@ func (b *Bot) subscribeSelectDatacenters(c tele.Context, args []string) error {
 
 	log.Infof("subscribeSelectDatacenters country=%s category=%s planCode=%s", country, category, planCode)
 
-	m := &tele.ReplyMarkup{ResizeKeyboard: true}
+	catalog, err := b.kimsufiService.ListServers(country)
+	if err != nil {
+		return fmt.Errorf("Failed to list servers: %w", err)
+	}
 
+	plan := catalog.GetPlan(planCode)
+	if plan == nil {
+		return c.Send("Server not found")
+	}
+
+	datacenters := plan.GetDatacenters()
+	log.Infof("planCode=%s config=%d datacenters=%v", plan.PlanCode, len(plan.Configurations), datacenters)
+	if len(datacenters) <= 0 {
+		err := b.subscribe(c, planCode, "")
+		if err != nil {
+			return fmt.Errorf("error subscribing: %w", err)
+		}
+		return c.Respond(&tele.CallbackResponse{})
+	}
+
+	m := &tele.ReplyMarkup{ResizeKeyboard: true}
 	btns := []tele.Btn{}
-	for _, datacenter := range kimsufi.AllowedDatacenters {
+
+	for _, datacenter := range datacenters {
 		btns = append(btns, m.Data(datacenter, "subscribedatacenters-"+datacenter, country, category, planCode, datacenter))
 	}
 
 	rows := m.Split(8, btns)
 	rows = append(rows, m.Row(m.Data("any datacenter", "subscribedatacenters-any", country, category, planCode, "any")))
 	m.Inline(rows...)
-	err := c.Send("Select a datacenter", m)
+	err = c.Send("Select a datacenter", m)
 	if err != nil {
 		return fmt.Errorf("error sending message: %w", err)
 	}
