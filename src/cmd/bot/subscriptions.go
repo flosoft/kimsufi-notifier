@@ -13,7 +13,9 @@ import (
 )
 
 var (
-	subscriptionCheckInterval = 5 * time.Second
+	subscriptionCheckInterval = 5 * time.Minute
+	subscriptionCheckLimit    = 100
+	subscriptionCheckOffset   = 0
 )
 
 func startSubscriptionCheck(k *kimsufi.Service, s *subscription.Service, b *tele.Bot) {
@@ -27,10 +29,8 @@ func startSubscriptionCheck(k *kimsufi.Service, s *subscription.Service, b *tele
 }
 
 func checkSubscriptions(k *kimsufi.Service, s *subscription.Service, b *tele.Bot) error {
-	var limit = 100
-	var offset = 0
 	for {
-		subscriptions, _, err := s.ListPaginate("user_id", limit, offset)
+		subscriptions, _, err := s.ListPaginate("user_id", subscriptionCheckLimit, subscriptionCheckOffset)
 		if err != nil {
 			return err
 		}
