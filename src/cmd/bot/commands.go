@@ -49,7 +49,7 @@ func helpCommand(c tele.Context) error {
 	output += "This bot can help you to monitor the availability of Kimsufi servers.\n"
 	output += "\n"
 	output += "You can subscribe to a plan and get notified when it becomes available with /subscribe command.\n"
-	output += "You can also list available servers and check their availability with /list command.\n"
+	output += "You can also list your current subscriptions /listsubscriptions command.\n"
 	output += "\n"
 	output += "You can use the following commands:\n"
 
