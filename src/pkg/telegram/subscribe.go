@@ -95,16 +95,17 @@ func (b *Bot) subscribe(c tele.Context, planCode, datacentersString string) erro
 		}
 	}
 
-	availabilities, err := b.kimsufiService.GetAvailabilities(datacenters, planCode)
+	_, err := b.kimsufiService.GetAvailabilities(datacenters, planCode)
 	if err != nil {
 		if !kimsufi.IsNotAvailableError(err) {
 			log.Errorf("failed to check availability before subscribing: %w", err)
 			return c.Send("Failed to check availability before subscribing")
 		}
 	}
-	if len(*availabilities) <= 0 {
-		return c.Send(fmt.Sprintf("Invalid plan code: <code>%s</code>", planCode), tele.ModeHTML)
-	}
+	// This code might not be required, empty availability used to mean invalid plan.
+	//if len(*availabilities) <= 0 {
+	//	return c.Send(fmt.Sprintf("Invalid plan code: <code>%s</code>", planCode), tele.ModeHTML)
+	//}
 
 	id, err := b.subscriptionService.Subscribe(c.Sender(), planCode, datacenters)
 	if err != nil {
