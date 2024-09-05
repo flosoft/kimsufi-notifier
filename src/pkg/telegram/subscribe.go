@@ -13,7 +13,7 @@ import (
 func (b *Bot) subscribeSelectDatacenters(c tele.Context, args []string) error {
 	if len(args) < 3 {
 		log.Errorf("subscribeSelectDatacenters missing arguments args=%d", len(args))
-		return c.Send("Failed to fetch datacenters")
+		return c.Edit("Failed to fetch datacenters")
 	}
 	country := args[0]
 	category := args[1]
@@ -24,13 +24,13 @@ func (b *Bot) subscribeSelectDatacenters(c tele.Context, args []string) error {
 	catalog, err := b.kimsufiService.ListServers(country)
 	if err != nil {
 		log.Errorf("subscribeSelectDatacenters failed to list servers: %v", err)
-		return c.Send("Failed to fetch datacenters")
+		return c.Edit("Failed to fetch datacenters")
 	}
 
 	plan := catalog.GetPlan(planCode)
 	if plan == nil {
 		log.Errorf("subscribeSelectDatacenters plan not found planCode=%s", planCode)
-		return c.Send("Failed to fetch datacenters")
+		return c.Edit("Failed to fetch datacenters")
 	}
 
 	datacenters := plan.GetDatacenters()
@@ -38,7 +38,7 @@ func (b *Bot) subscribeSelectDatacenters(c tele.Context, args []string) error {
 		err := b.subscribe(c, planCode, "")
 		if err != nil {
 			log.Errorf("subscribeSelectDatacenters error subscribing: %v", err)
-			return c.Send("Failed to subscribe")
+			return c.Edit("Failed to subscribe")
 		}
 		return c.Respond(&tele.CallbackResponse{})
 	}
@@ -52,8 +52,9 @@ func (b *Bot) subscribeSelectDatacenters(c tele.Context, args []string) error {
 
 	rows := m.Split(8, btns)
 	rows = append(rows, m.Row(m.Data("any datacenter", "subscribedatacenters-any", country, category, planCode, "any")))
+	rows = append(rows, m.Row(m.Data("Cancel", "cancel", "cancel")))
 	m.Inline(rows...)
-	err = c.Send("Select a datacenter", m)
+	err = c.Edit("Select a datacenter", m)
 	if err != nil {
 		log.Errorf("subscribeSelectDatacenters failed to send message: %v", err)
 		return err
@@ -65,7 +66,7 @@ func (b *Bot) subscribeSelectDatacenters(c tele.Context, args []string) error {
 func (b *Bot) subscribeWrapper(c tele.Context, args []string) error {
 	if len(args) < 4 {
 		log.Errorf("subscribeWrapper missing arguments args=%d", len(args))
-		return c.Send("Failed to subscribe")
+		return c.Edit("Failed to subscribe")
 	}
 	country := args[0]
 	category := args[1]
@@ -82,7 +83,7 @@ func (b *Bot) subscribeWrapper(c tele.Context, args []string) error {
 	err := b.subscribe(c, planCode, d)
 	if err != nil {
 		log.Errorf("subscribeWrapper error subscribing: %v", err)
-		return c.Send("Failed to subscribe")
+		return c.Edit("Failed to subscribe")
 	}
 
 	return c.Respond(&tele.CallbackResponse{})
@@ -98,18 +99,18 @@ func (b *Bot) subscribe(c tele.Context, planCode, datacentersString string) erro
 	if err != nil {
 		if !kimsufi.IsNotAvailableError(err) {
 			log.Errorf("subscribe: failed to check availability before subscribing: %w", err)
-			return c.Send("Failed to check availability before subscribing")
+			return c.Edit("Failed to check availability before subscribing")
 		}
 	}
 	// This code might not be required, empty availability used to mean invalid plan.
 	//if len(*availabilities) <= 0 {
-	//	return c.Send(fmt.Sprintf("Invalid plan code: <code>%s</code>", planCode), tele.ModeHTML)
+	//	return c.Edit(fmt.Sprintf("Invalid plan code: <code>%s</code>", planCode), tele.ModeHTML)
 	//}
 
 	id, err := b.subscriptionService.Subscribe(c.Sender(), planCode, datacenters)
 	if err != nil {
 		log.Errorf("subscribe: failed to subscribe: %v", err)
-		return c.Send("Failed to subscribe")
+		return c.Edit("Failed to subscribe")
 	}
 
 	var datacentersMessage string
@@ -121,7 +122,7 @@ func (b *Bot) subscribe(c tele.Context, planCode, datacentersString string) erro
 		datacentersMessage = "any datacenter"
 	}
 
-	return c.Send(fmt.Sprintf("You will be notified when plan <code>%s</code> is available in %s (subscriptionId: <code>%d</code>)", planCode, datacentersMessage, id), tele.ModeHTML)
+	return c.Edit(fmt.Sprintf("You will be notified when plan <code>%s</code> is available in %s (subscriptionId: <code>%d</code>)", planCode, datacentersMessage, id), tele.ModeHTML)
 }
 
 func (b *Bot) subscribeCommand_old(c tele.Context) error {

@@ -69,6 +69,8 @@ func NewBot(k *kimsufi.Service, s *subscription.Service) (*Bot, error) {
 			return bot.subscribeWrapper(c, data)
 		case "unsubscribe":
 			return bot.unsubscribeWrapper(c, data)
+		case "cancel":
+			return bot.cancelWrapper(c)
 		}
 
 		return c.Respond(&tele.CallbackResponse{})
