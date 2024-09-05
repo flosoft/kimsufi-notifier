@@ -82,7 +82,7 @@ func runner(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to initialize subscription service: %w", err)
 	}
 
-	telegramBot, err := telegram.NewBot()
+	telegramBot, err := telegram.NewBot(k, s)
 	if err != nil {
 		return fmt.Errorf("failed to initialize telegram bot: %w", err)
 	}
@@ -90,14 +90,12 @@ func runner(cmd *cobra.Command, args []string) error {
 	telegramBot.Handle(commands["help"].command, helpCommand)
 	telegramBot.Handle(commands["categories"].command, categoriesCommand)
 	telegramBot.Handle(commands["countries"].command, countriesCommand)
-	telegramBot.Handle(commands["list"].command, listCommand(k))
 	telegramBot.Handle(commands["check"].command, checkCommand(k))
-	telegramBot.Handle(commands["subscribe"].command, subscribeCommand(k, s))
 	telegramBot.Handle(commands["unsubscribe"].command, unsubscribeCommand(s))
 	telegramBot.Handle(commands["listsubscriptions"].command, listSubscriptionsCommand(s))
 	telegramBot.Handle(tele.OnText, helpCommand)
 
-	startSubscriptionCheck(k, s, telegramBot)
+	startSubscriptionCheck(k, s, telegramBot.Bot)
 
 	fmt.Println("Bot is running")
 	telegramBot.Start()
