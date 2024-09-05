@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
 		datacenters TEXT,
 		user_id INTEGER NOT NULL,
 		user TEXT NOT NULL,
+		last_check TEXT NOT NULL,
 		UNIQUE (id, user_id)
 );
 `

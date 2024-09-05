@@ -29,8 +29,9 @@ func startSubscriptionCheck(k *kimsufi.Service, s *subscription.Service, b *tele
 }
 
 func checkSubscriptions(k *kimsufi.Service, s *subscription.Service, b *tele.Bot) error {
+	currentOffset := subscriptionCheckOffset
 	for {
-		subscriptions, _, err := s.ListPaginate("user_id", subscriptionCheckLimit, subscriptionCheckOffset)
+		subscriptions, _, err := s.ListPaginate("user_id", subscriptionCheckLimit, currentOffset)
 		if err != nil {
 			return err
 		}
@@ -39,7 +40,7 @@ func checkSubscriptions(k *kimsufi.Service, s *subscription.Service, b *tele.Bot
 			break
 		}
 
-		for _, subscriptions := range subscriptions {
+		for user_id, subscriptions := range subscriptions {
 			for id, subscription := range subscriptions {
 				log.Infof("subscriptioncheck: username=%s subscriptionId=%d check", subscription.User.Username, id)
 				availabilities, err := k.GetAvailabilities(subscription.Datacenters, subscription.PlanCode)
@@ -57,7 +58,10 @@ func checkSubscriptions(k *kimsufi.Service, s *subscription.Service, b *tele.Bot
 					}
 				}
 			}
+			s.Database.UpdateLastCheck(user_id)
 		}
+
+		currentOffset = currentOffset + subscriptionCheckLimit
 	}
 
 	return nil

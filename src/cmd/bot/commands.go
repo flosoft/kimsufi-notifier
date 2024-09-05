@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"text/tabwriter"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	tele "gopkg.in/telebot.v3"
@@ -253,11 +254,11 @@ func listSubscriptionsCommand(s *subscription.Service) func(tele.Context) error 
 
 		var output = &bytes.Buffer{}
 		w := tabwriter.NewWriter(output, 0, 0, 4, ' ', 0)
-		fmt.Fprintln(w, "subscriptionId\tplanCode\tdatacenters")
-		fmt.Fprintln(w, "--------------\t--------\t-----------")
+		fmt.Fprintln(w, "subscriptionId\tplanCode\tdatacenters\tlast_check")
+		fmt.Fprintln(w, "--------------\t--------\t-----------\t----------")
 
 		for k, v := range subscriptions {
-			fmt.Fprintf(w, "%d\t%s\t%s\n", k, v.PlanCode, strings.Join(v.Datacenters, ", "))
+			fmt.Fprintf(w, "%d\t%s\t%s\t%s\n", k, v.PlanCode, strings.Join(v.Datacenters, ", "), v.LastCheck.Format(time.RFC1123))
 		}
 		w.Flush()
 

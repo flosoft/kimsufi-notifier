@@ -1,6 +1,8 @@
 package subscription
 
 import (
+	"time"
+
 	tele "gopkg.in/telebot.v3"
 )
 
@@ -8,6 +10,7 @@ type Subscription struct {
 	PlanCode    string
 	Datacenters []string
 	User        *tele.User
+	LastCheck   time.Time
 }
 
 type Service struct {
@@ -30,6 +33,7 @@ func (s *Service) Subscribe(telegramUser *tele.User, planCode string, datacenter
 		PlanCode:    planCode,
 		Datacenters: datacenters,
 		User:        telegramUser,
+		LastCheck:   time.Now(),
 	}
 
 	id, err := s.Database.Insert(subscription)

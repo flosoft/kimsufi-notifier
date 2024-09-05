@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/mattn/go-sqlite3"
 )
@@ -17,12 +18,13 @@ var (
 )
 
 const (
-	insertQuery     = `INSERT INTO subscriptions (plan_code, datacenters, user_id, user) VALUES (?, ?, ?, ?);`
-	selectQuery     = `SELECT plan_code, datacenters, user FROM subscriptions WHERE id = ? AND user_id = ?;`
-	selectUserQuery = `SELECT id, plan_code, datacenters, user FROM subscriptions WHERE user_id = ?;`
-	listQuery       = `SELECT id, plan_code, datacenters, user FROM subscriptions ORDER BY %s DESC LIMIT ? OFFSET ?;`
-	listQueryCount  = `SELECT count(*) FROM subscriptions;`
-	deleteQuery     = `DELETE FROM subscriptions WHERE id = ? AND user_id = ?;`
+	insertQuery         = `INSERT INTO subscriptions (plan_code, datacenters, user_id, user, last_check) VALUES (?, ?, ?, ?, ?);`
+	selectQuery         = `SELECT plan_code, datacenters, user FROM subscriptions WHERE id = ? AND user_id = ?;`
+	selectUserQuery     = `SELECT id, plan_code, datacenters, user, last_check FROM subscriptions WHERE user_id = ?;`
+	listQuery           = `SELECT id, plan_code, datacenters, user FROM subscriptions ORDER BY %s DESC LIMIT ? OFFSET ?;`
+	listQueryCount      = `SELECT count(*) FROM subscriptions;`
+	updateLastCheckUser = `UPDATE subscriptions SET last_check = ? WHERE user_id = ?;`
+	deleteQuery         = `DELETE FROM subscriptions WHERE id = ? AND user_id = ?;`
 )
 
 type Database struct {
@@ -53,7 +55,7 @@ func (db Database) Insert(s Subscription) (int64, error) {
 		return -1, err
 	}
 
-	r, err := db.DB.Exec(insertQuery, s.PlanCode, strings.Join(s.Datacenters, ","), s.User.ID, string(userJSON))
+	r, err := db.DB.Exec(insertQuery, s.PlanCode, strings.Join(s.Datacenters, ","), s.User.ID, string(userJSON), s.LastCheck.Format(time.RFC3339))
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
 			//if errors.Is(err, sqlite3.ErrConstraintUnique) {
@@ -109,13 +111,19 @@ func (db Database) QueryUser(user_id int64) (map[int64]Subscription, error) {
 		var id int64
 		var datacenters string
 		var userJSON string
+		var lastCheckString string
 
-		err = rows.Scan(&id, &s.PlanCode, &datacenters, &userJSON)
+		err = rows.Scan(&id, &s.PlanCode, &datacenters, &userJSON, &lastCheckString)
 		if err != nil {
 			return nil, err
 		}
 
 		err = json.Unmarshal([]byte(userJSON), &s.User)
+		if err != nil {
+			return nil, err
+		}
+
+		s.LastCheck, err = time.Parse(time.RFC3339, lastCheckString)
 		if err != nil {
 			return nil, err
 		}
@@ -185,5 +193,14 @@ func (db Database) Delete(id int64, user_id int64) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (db Database) UpdateLastCheck(user_id int64) error {
+	_, err := db.DB.Exec(updateLastCheckUser, time.Now().Format(time.RFC3339), user_id)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
