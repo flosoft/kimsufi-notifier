@@ -25,6 +25,7 @@ const (
 	listQueryCount      = `SELECT count(*) FROM subscriptions;`
 	updateLastCheckUser = `UPDATE subscriptions SET last_check = ? WHERE user_id = ?;`
 	deleteQuery         = `DELETE FROM subscriptions WHERE id = ? AND user_id = ?;`
+	deleteAllQuery      = `DELETE FROM subscriptions WHERE user_id = ?;`
 )
 
 type Database struct {
@@ -197,6 +198,24 @@ func (db Database) QueryList(sortBy string, limit, offset int) (map[int64]map[in
 
 func (db Database) Delete(id int64, user_id int64) error {
 	r, err := db.DB.Exec(deleteQuery, id, user_id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := r.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("%w %w", ErrorNotFound, errors.New("no rows affected"))
+	}
+
+	return nil
+}
+
+func (db Database) DeleteAll(user_id int64) error {
+	r, err := db.DB.Exec(deleteAllQuery, user_id)
 	if err != nil {
 		return err
 	}

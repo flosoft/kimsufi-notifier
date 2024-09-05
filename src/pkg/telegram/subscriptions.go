@@ -32,6 +32,20 @@ func (b *Bot) unsubscribeWrapper(c tele.Context, args []string) error {
 }
 
 func (b *Bot) unsubscribe(c tele.Context, id string) error {
+	if id == "all" {
+		err := b.subscriptionService.UnsubscribeAll(c.Sender())
+		if err != nil {
+			if errors.Is(err, subscription.ErrorNotFound) {
+				return c.Send("No subscriptions")
+			}
+
+			log.Errorf("failed to unsubscribe: %w", err)
+			return c.Send("Failed to unsubscribe")
+		}
+
+		return c.Send("You unsubscribed from all notification", tele.ModeHTML)
+	}
+
 	subscriptionId, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
 		return c.Send("Invalid subscription ID")
@@ -47,7 +61,8 @@ func (b *Bot) unsubscribe(c tele.Context, id string) error {
 		return c.Send("Failed to unsubscribe")
 	}
 
-	return c.Send(fmt.Sprintf("You unsubscribed from subscription <code>%d</code>", subscriptionId), tele.ModeHTML)
+	return c.Send(fmt.Sprintf("You unsubscribed from notification <code>%d</code>", subscriptionId), tele.ModeHTML)
+
 }
 
 func (b *Bot) unsubscribeCommand(c tele.Context) error {
@@ -84,7 +99,13 @@ func (b *Bot) listSubscriptions(c tele.Context, showButtons bool) error {
 		btns = append(btns, m.Data(s, fmt.Sprintf("unsubscribe-%d", k), s))
 	}
 	w.Flush()
-	m.Inline(m.Split(8, btns)...)
+	rows := m.Split(8, btns)
+	rows = append(rows, m.Row(m.Data("unsubscribe from all", "unsubscribe-all", "all")))
+	m.Inline(rows...)
+
+	if len(subscriptions) == 0 {
+		return c.Send("You have no subscriptions")
+	}
 
 	if showButtons {
 		return c.Send("<pre>"+output.String()+"</pre>\nSelect a subscription to delete", m, tele.ModeHTML)

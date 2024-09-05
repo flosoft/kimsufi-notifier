@@ -53,6 +53,15 @@ func (s *Service) Unsubscribe(telegramUser *tele.User, subscriptionId int64) err
 	return nil
 }
 
+func (s *Service) UnsubscribeAll(telegramUser *tele.User) error {
+	err := s.Database.DeleteAll(telegramUser.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *Service) ListUser(telegramUser *tele.User) (map[int64]Subscription, error) {
 	subscriptions, err := s.Database.QueryUser(telegramUser.ID)
 	if err != nil {
