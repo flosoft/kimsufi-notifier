@@ -15,11 +15,8 @@ import (
 	"github.com/TheoBrigitte/kimsufi-notifier/pkg/kimsufi"
 )
 
-func (b *Bot) listSelectCountry(c tele.Context) error {
-	//args := c.Args()
-	//log.Info(fmt.Sprintf("Handle list command user=%s args=%v", formatUser(c.Sender()), args))
-
-	log.Infof("listSelectCountry")
+func (b *Bot) subscribeCommand(c tele.Context) error {
+	log.Info(fmt.Sprintf("Handle /subscribe command user=%s", formatUser(c.Sender())))
 
 	m := &tele.ReplyMarkup{ResizeKeyboard: true}
 

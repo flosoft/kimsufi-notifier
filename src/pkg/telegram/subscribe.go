@@ -119,7 +119,7 @@ func (b *Bot) subscribe(c tele.Context, planCode, datacentersString string) erro
 	return c.Send(fmt.Sprintf("You will be notified when plan <code>%s</code> is available in %s (subscriptionId: <code>%d</code>)", planCode, datacentersMessage, id), tele.ModeHTML)
 }
 
-func (b *Bot) subscribeCommand(c tele.Context) error {
+func (b *Bot) subscribeCommand_old(c tele.Context) error {
 	args := c.Args()
 
 	log.Info(fmt.Sprintf("Handle /subscribe command user=%s args=%v", formatUser(c.Sender()), args))
