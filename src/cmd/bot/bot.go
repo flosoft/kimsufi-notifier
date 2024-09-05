@@ -20,11 +20,11 @@ var (
 		RunE:  runner,
 	}
 
-	planCode      string
-	ovhSubsidiary string
+	databaseFilename string
 )
 
 func init() {
+	Cmd.PersistentFlags().StringVarP(&databaseFilename, "database-filename", "d", "kimsufi-notifier.sqlite3", "filename of the SQLite database")
 }
 
 var (
@@ -77,7 +77,7 @@ func runner(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to initialize kimsufi service: %w", err)
 	}
 
-	s, err := subscription.NewService()
+	s, err := subscription.NewService(databaseFilename)
 	if err != nil {
 		return fmt.Errorf("failed to initialize subscription service: %w", err)
 	}

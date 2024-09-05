@@ -14,10 +14,10 @@ type Service struct {
 	Database *Database
 }
 
-func NewService() (s *Service, err error) {
+func NewService(databaseFilename string) (s *Service, err error) {
 	s = &Service{}
 
-	s.Database, err = NewDatabase("subscriptions.sqlite")
+	s.Database, err = NewDatabase(databaseFilename)
 	if err != nil {
 		return nil, err
 	}
