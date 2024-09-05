@@ -109,14 +109,14 @@ func (b *Bot) subscribe(c tele.Context, planCode, datacentersString string) erro
 
 	var datacentersMessage string
 	if len(datacenters) > 1 {
-		datacentersMessage = "one of the following datacenters"
+		datacentersMessage = fmt.Sprintf("one of the following datacenters <code>%s</code>", strings.Join(datacenters, "</code>, <code>"))
 	} else if len(datacenters) == 1 {
-		datacentersMessage = "this datacenter"
+		datacentersMessage = fmt.Sprintf("<code>%s</code> datacenter", datacenters[0])
 	} else {
 		datacentersMessage = "any datacenter"
 	}
 
-	return c.Send(fmt.Sprintf("You will be notified when plan <code>%s</code> is available in %s <code>%s</code> (subscriptionId: <code>%d</code>)", planCode, datacentersMessage, strings.Join(datacenters, "</code>, <code>"), id), tele.ModeHTML)
+	return c.Send(fmt.Sprintf("You will be notified when plan <code>%s</code> is available in %s (subscriptionId: <code>%d</code>)", planCode, datacentersMessage, id), tele.ModeHTML)
 }
 
 func (b *Bot) subscribeCommand(c tele.Context) error {
