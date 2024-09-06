@@ -53,7 +53,7 @@ func NewBot(k *kimsufi.MultiService, s *subscription.Service) (*Bot, error) {
 	b.Handle(tele.OnCallback, func(c tele.Context) error {
 		callback := c.Callback()
 
-		log.WithField("rawData", callback.Data).WithField("rawUnique", callback.Unique).Trace("Callback rawData")
+		//log.WithField("rawData", callback.Data).WithField("rawUnique", callback.Unique).Trace("Callback rawData")
 		garbage := strings.Split(callback.Data, "|")
 		data, values := parseUniqueData(garbage)
 		log.WithField("data", strings.Join(data, "|")).WithField("unique", strings.Join(values, "-")).Trace("Callback parsedData")

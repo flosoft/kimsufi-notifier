@@ -96,10 +96,10 @@ func (s *Service) GetAvailabilities(datacenters []string, planCode string) (*Ava
 	cacheKey := fmt.Sprintf("%s%s", s.client.Endpoint(), u.String())
 	cacheEntry, found := s.cache.Get(cacheKey)
 	if found {
-		s.logger.Debugf("cache hit: %s", cacheKey)
+		s.logger.Tracef("cache hit: %s", cacheKey)
 		availabilities = cacheEntry.(*Availabilities)
 	} else {
-		s.logger.Debugf("cache miss: %s", cacheKey)
+		s.logger.Tracef("cache miss: %s", cacheKey)
 		err = s.client.GetUnAuth(u.String(), &availabilities)
 		if err != nil {
 			return nil, err
@@ -120,11 +120,11 @@ func (s *Service) ListServers(ovhSubsidiary string) (*Catalog, error) {
 	cacheKey := fmt.Sprintf("%s%s", s.client.Endpoint(), u.String())
 	cacheEntry, found := s.cache.Get(cacheKey)
 	if found {
-		s.logger.Debugf("cache hit: %s", cacheKey)
+		s.logger.Tracef("cache hit: %s", cacheKey)
 		catalog = cacheEntry.(*Catalog)
 
 	} else {
-		s.logger.Debugf("cache miss: %s", cacheKey)
+		s.logger.Tracef("cache miss: %s", cacheKey)
 		err = s.client.GetUnAuth(u.String(), &catalog)
 		if err != nil {
 			return nil, err
@@ -148,11 +148,11 @@ func NewRequestLogger(l *logrus.Logger) *Logger {
 }
 
 func (l *Logger) LogRequest(r *http.Request) {
-	l.logger.Debugf("kimsufi: %s %s %s %v\n", r.Method, r.URL.String(), r.Proto, r.Header)
+	l.logger.Tracef("kimsufi: %s %s %s %v\n", r.Method, r.URL.String(), r.Proto, r.Header)
 }
 
 func (l *Logger) LogResponse(r *http.Response) {
-	l.logger.Debugf("kimsufi: %s %s %v\n", r.Status, r.Proto, r.Header)
+	l.logger.Tracef("kimsufi: %s %s %v\n", r.Status, r.Proto, r.Header)
 }
 
 // https://eu.api.ovh.com/v1/order.json
@@ -166,11 +166,11 @@ func (s *Service) GetOrderSchema() (*Order, error) {
 	cacheKey := fmt.Sprintf("%s%s", s.client.Endpoint(), u.String())
 	cacheEntry, found := s.cache.Get(cacheKey)
 	if found {
-		s.logger.Debugf("cache hit: %s", cacheKey)
+		s.logger.Tracef("cache hit: %s", cacheKey)
 		order = cacheEntry.(*Order)
 
 	} else {
-		s.logger.Debugf("cache miss: %s", cacheKey)
+		s.logger.Tracef("cache miss: %s", cacheKey)
 		err = s.client.GetUnAuth(u.String(), &order)
 		if err != nil {
 			return nil, err
