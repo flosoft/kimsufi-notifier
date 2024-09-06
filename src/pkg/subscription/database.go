@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -18,8 +19,8 @@ var (
 )
 
 const (
-	listQueryCount              = `SELECT count(*) FROM subscriptions;`
-	updateLastCheckSubscription = `UPDATE subscriptions SET last_check = ? WHERE id = ?;`
+	listQueryCount                           = `SELECT count(*) FROM subscriptions;`
+	updateNotificationsLastCheckSubscription = `UPDATE subscriptions SET last_check = ?, notifications = ? WHERE id = ?;`
 
 	insertSubscription = `INSERT OR IGNORE INTO users (user_id, user) VALUES (?, ?);` +
 		`INSERT OR IGNORE INTO subscriptions (plan_code, datacenters, region, last_check) VALUES (?, ?, ?, ?);` +
@@ -32,6 +33,7 @@ const (
 	countSubscriptions              = `SELECT count(*) FROM user_subscriptions;`
 	deleteUserSubscription          = `DELETE FROM user_subscriptions WHERE subscription_id = ? AND user_id = ?;`
 	deleteAllUserSubscriptions      = `DELETE FROM user_subscriptions WHERE user_id = ?;`
+	deleteMultipleSubscriptions     = `DELETE FROM user_subscriptions WHERE subscription_id = ? AND user_id IN(?);`
 	updateSubscriptionNotifications = `UPDATE subscriptions SET notifications = notifications ? WHERE id = ?;`
 )
 
@@ -218,17 +220,30 @@ func (db Database) DeleteAll(user_id int64) error {
 	return nil
 }
 
-func (db Database) UpdateLastCheck(subscriptionID int64) error {
-	_, err := db.DB.Exec(updateLastCheckSubscription, time.Now().Format(time.RFC3339), subscriptionID)
+func (db Database) DeleteMultiple(subscription_id int64, userIDs []int64) error {
+	var ids []string
+	for _, id := range userIDs {
+		ids = append(ids, strconv.FormatInt(id, 10))
+	}
+	r, err := db.DB.Exec(deleteMultipleSubscriptions, subscription_id, strings.Join(ids, ","))
 	if err != nil {
 		return err
+	}
+
+	rowsAffected, err := r.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("%w %w", ErrorNotFound, errors.New("no rows affected"))
 	}
 
 	return nil
 }
 
-func (db Database) UpdateNotifications(subscriptionID, notification int64) error {
-	_, err := db.DB.Exec(updateSubscriptionNotifications, notification, subscriptionID)
+func (db Database) UpdateNotificationsLastCheck(subscription Subscription) error {
+	_, err := db.DB.Exec(updateNotificationsLastCheckSubscription, time.Now().Format(time.RFC3339), subscription.Notifications, subscription.ID)
 	if err != nil {
 		return err
 	}

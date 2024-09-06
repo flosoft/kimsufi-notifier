@@ -49,18 +49,25 @@ func checkSubscriptions(m *kimsufi.MultiService, s *subscription.Service, b *tel
 
 			datacenters := availabilities.GetPlanCodeAvailableDatacenters(subscription.PlanCode)
 			if len(datacenters) > 0 {
+				var userIDs []int64
 				for _, user := range subscription.Users {
 					_, err = b.Send(user, fmt.Sprintf("@%s plan <code>%s</code> is available in <code>%s</code>", user.Username, subscription.PlanCode, strings.Join(datacenters, "</code>, <code>")), tele.ModeHTML)
 					if err != nil {
 						log.Errorf("subscriptioncheck: subscriptionId=%d username=%s failed to send message: %v", subscription.ID, user.Username, err)
 					} else {
 						subscription.Notifications++
-						s.Unsubscribe(user, subscription.ID)
+						userIDs = append(userIDs, user.ID)
 					}
 				}
-				s.Database.UpdateNotifications(subscription.ID, subscription.Notifications)
+				err = s.UnsubscribeMultiple(subscription.ID, userIDs)
+				if err != nil {
+					log.Errorf("subscriptioncheck: subscriptionId=%d failed to unsubscribe: %v", subscription.ID, err)
+				}
 			}
-			s.Database.UpdateLastCheck(subscription.ID)
+			err = s.Database.UpdateNotificationsLastCheck(subscription)
+			if err != nil {
+				log.Errorf("subscriptioncheck: subscriptionId=%d failed to update subscription: %v", subscription.ID, err)
+			}
 		}
 
 		currentOffset = currentOffset + subscriptionCheckLimit
