@@ -1,6 +1,7 @@
 package telegram
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -8,6 +9,7 @@ import (
 	tele "gopkg.in/telebot.v3"
 
 	"github.com/TheoBrigitte/kimsufi-notifier/pkg/kimsufi"
+	"github.com/TheoBrigitte/kimsufi-notifier/pkg/subscription"
 )
 
 func (b *Bot) subscribeSelectDatacenters(c tele.Context, args []string) error {
@@ -111,6 +113,10 @@ func (b *Bot) subscribe(c tele.Context, region, planCode, datacentersString stri
 
 	id, err := b.subscriptionService.Subscribe(c.Sender(), region, planCode, datacenters)
 	if err != nil {
+		if errors.Is(err, subscription.ErrorAlreadyExists) {
+			return c.Edit("You are already subscribed to this notification")
+		}
+
 		log.Errorf("subscribe: failed to subscribe: %v", err)
 		return c.Edit("Failed to subscribe")
 	}

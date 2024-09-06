@@ -98,9 +98,9 @@ func (b *Bot) listSubscriptions(c tele.Context, showButtons bool) error {
 
 	m := &tele.ReplyMarkup{ResizeKeyboard: true}
 	btns := []tele.Btn{}
-	for k, v := range subscriptions {
-		fmt.Fprintf(w, "%d\t%s\t%s\t%s\n", k, v.PlanCode, strings.Join(v.Datacenters, ", "), v.LastCheck.Format(time.RFC1123))
-		s := strconv.FormatInt(k, 10)
+	for _, v := range subscriptions {
+		fmt.Fprintf(w, "%d\t%s\t%s\t%s\n", v.ID, v.PlanCode, strings.Join(v.Datacenters, ", "), v.LastCheck.Format(time.RFC1123))
+		s := strconv.FormatInt(v.ID, 10)
 		btns = append(btns, m.Data(s, ButtontUnsubscribe, s))
 	}
 	w.Flush()

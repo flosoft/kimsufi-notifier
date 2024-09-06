@@ -7,11 +7,13 @@ import (
 )
 
 type Subscription struct {
-	PlanCode    string
-	Datacenters []string
-	Region      string
-	User        *tele.User
-	LastCheck   time.Time
+	ID            int64
+	PlanCode      string
+	Datacenters   []string
+	Region        string
+	LastCheck     time.Time
+	Users         []*tele.User
+	Notifications int64
 }
 
 type Service struct {
@@ -34,11 +36,10 @@ func (s *Service) Subscribe(telegramUser *tele.User, region, planCode string, da
 		PlanCode:    planCode,
 		Datacenters: datacenters,
 		Region:      region,
-		User:        telegramUser,
 		LastCheck:   time.Now(),
 	}
 
-	id, err := s.Database.Insert(subscription)
+	id, err := s.Database.InsertSubscription(subscription, telegramUser)
 	if err != nil {
 		return -1, err
 	}
@@ -64,8 +65,8 @@ func (s *Service) UnsubscribeAll(telegramUser *tele.User) error {
 	return nil
 }
 
-func (s *Service) ListUser(telegramUser *tele.User) (map[int64]Subscription, error) {
-	subscriptions, err := s.Database.QueryUser(telegramUser.ID)
+func (s *Service) ListUser(telegramUser *tele.User) ([]Subscription, error) {
+	subscriptions, err := s.Database.QueryUserSubscriptions(telegramUser.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +74,7 @@ func (s *Service) ListUser(telegramUser *tele.User) (map[int64]Subscription, err
 	return subscriptions, nil
 }
 
-func (s *Service) ListPaginate(sortBy string, limit, offset int) (map[int64]map[int64]Subscription, int, error) {
+func (s *Service) ListPaginate(sortBy string, limit, offset int) (map[int64]Subscription, int, error) {
 	subscriptions, count, err := s.Database.QueryList(sortBy, limit, offset)
 	if err != nil {
 		return nil, 0, err

@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/url"
 	"strings"
 	"time"
 
 	"github.com/mattn/go-sqlite3"
+	tele "gopkg.in/telebot.v3"
 )
 
 var (
@@ -18,14 +18,21 @@ var (
 )
 
 const (
-	insertQuery         = `INSERT INTO subscriptions (plan_code, datacenters, region, user_id, user, last_check) VALUES (?, ?, ?, ?, ?, ?);`
-	selectQuery         = `SELECT plan_code, datacenters, user FROM subscriptions WHERE id = ? AND user_id = ?;`
-	selectUserQuery     = `SELECT id, plan_code, datacenters, region, user, last_check FROM subscriptions WHERE user_id = ?;`
-	listQuery           = `SELECT id, plan_code, datacenters, region, user FROM subscriptions ORDER BY %s DESC LIMIT ? OFFSET ?;`
-	listQueryCount      = `SELECT count(*) FROM subscriptions;`
-	updateLastCheckUser = `UPDATE subscriptions SET last_check = ? WHERE user_id = ?;`
-	deleteQuery         = `DELETE FROM subscriptions WHERE id = ? AND user_id = ?;`
-	deleteAllQuery      = `DELETE FROM subscriptions WHERE user_id = ?;`
+	listQueryCount              = `SELECT count(*) FROM subscriptions;`
+	updateLastCheckSubscription = `UPDATE subscriptions SET last_check = ? WHERE id = ?;`
+
+	insertSubscription = `INSERT OR IGNORE INTO users (user_id, user) VALUES (?, ?);` +
+		`INSERT OR IGNORE INTO subscriptions (plan_code, datacenters, region, last_check) VALUES (?, ?, ?, ?);` +
+		//`INSERT INTO user_subscriptions (user_id, subscription_id) VALUES(?, 12);`
+		`INSERT INTO user_subscriptions (user_id, subscription_id) VALUES(?, (SELECT id FROM subscriptions WHERE plan_code = ? AND datacenters = ? AND region = ?));`
+
+	selectUserSubscriptions = `SELECT us.id, s.plan_code, s.datacenters, s.region, s.last_check, s.notifications FROM user_subscriptions AS us JOIN subscriptions AS s ON us.subscription_id = s.id WHERE us.user_id = ?;`
+
+	listSubscriptions               = `SELECT s.id, s.plan_code, s.datacenters, s.region, s.last_check, s.notifications, u.user FROM user_subscriptions AS us JOIN subscriptions AS s ON us.subscription_id = s.id JOIN users AS u ON us.user_id = u.user_id ORDER BY us.id ASC LIMIT ? OFFSET ?;`
+	countSubscriptions              = `SELECT count(*) FROM user_subscriptions;`
+	deleteUserSubscription          = `DELETE FROM user_subscriptions WHERE subscription_id = ? AND user_id = ?;`
+	deleteAllUserSubscriptions      = `DELETE FROM user_subscriptions WHERE user_id = ?;`
+	updateSubscriptionNotifications = `UPDATE subscriptions SET notifications = notifications ? WHERE id = ?;`
 )
 
 type Database struct {
@@ -50,13 +57,25 @@ func NewDatabase(filename string) (*Database, error) {
 	return &Database{db}, nil
 }
 
-func (db Database) Insert(s Subscription) (int64, error) {
-	userJSON, err := json.Marshal(s.User)
+// InsertSubscription replaces Insert
+func (db Database) InsertSubscription(s Subscription, user *tele.User) (int64, error) {
+	userJSON, err := json.Marshal(user)
 	if err != nil {
 		return -1, err
 	}
 
-	r, err := db.DB.Exec(insertQuery, s.PlanCode, strings.Join(s.Datacenters, ","), s.Region, s.User.ID, string(userJSON), s.LastCheck.Format(time.RFC3339))
+	r, err := db.DB.Exec(insertSubscription,
+		user.ID,
+		string(userJSON),
+		s.PlanCode,
+		strings.Join(s.Datacenters, ","),
+		s.Region,
+		s.LastCheck.Format(time.RFC3339),
+		user.ID,
+		s.PlanCode,
+		strings.Join(s.Datacenters, ","),
+		s.Region,
+	)
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
 			//if errors.Is(err, sqlite3.ErrConstraintUnique) {
@@ -66,6 +85,7 @@ func (db Database) Insert(s Subscription) (int64, error) {
 		return -1, err
 	}
 
+	// Is this the subscriptionId?
 	id, err := r.LastInsertId()
 	if err != nil {
 		return -1, err
@@ -74,33 +94,9 @@ func (db Database) Insert(s Subscription) (int64, error) {
 	return id, nil
 }
 
-func (db Database) Query(id int64, user_id int64) (*Subscription, error) {
-	var s = &Subscription{}
-	var datacenters string
-	var userJSON string
-
-	row := db.DB.QueryRow(selectQuery, id, user_id)
-	err := row.Scan(&s.PlanCode, &datacenters, &userJSON)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("%w %w", ErrorNotFound, err)
-		}
-
-		return nil, err
-	}
-
-	err = json.Unmarshal([]byte(userJSON), &s.User)
-	if err != nil {
-		return nil, err
-	}
-
-	s.Datacenters = strings.Split(datacenters, ",")
-
-	return s, nil
-}
-
-func (db Database) QueryUser(user_id int64) (map[int64]Subscription, error) {
-	rows, err := db.DB.Query(selectUserQuery, user_id)
+// QueryUserSubscriptions replaces QueryUser
+func (db Database) QueryUserSubscriptions(user_id int64) ([]Subscription, error) {
+	rows, err := db.DB.Query(selectUserSubscriptions, user_id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, fmt.Errorf("%w %w", ErrorNotFound, err)
@@ -110,20 +106,13 @@ func (db Database) QueryUser(user_id int64) (map[int64]Subscription, error) {
 	}
 	defer rows.Close()
 
-	subscriptions := make(map[int64]Subscription)
+	subscriptions := make([]Subscription, 0)
 	for rows.Next() {
 		var s = Subscription{}
-		var id int64
 		var datacenters string
-		var userJSON string
 		var lastCheckString string
 
-		err = rows.Scan(&id, &s.PlanCode, &datacenters, &s.Region, &userJSON, &lastCheckString)
-		if err != nil {
-			return nil, err
-		}
-
-		err = json.Unmarshal([]byte(userJSON), &s.User)
+		err = rows.Scan(&s.ID, &s.PlanCode, &datacenters, &s.Region, &lastCheckString, &s.Notifications)
 		if err != nil {
 			return nil, err
 		}
@@ -135,20 +124,14 @@ func (db Database) QueryUser(user_id int64) (map[int64]Subscription, error) {
 
 		s.Datacenters = strings.Split(datacenters, ",")
 
-		subscriptions[id] = s
+		subscriptions = append(subscriptions, s)
 	}
 
 	return subscriptions, nil
 }
 
-func (db Database) QueryList(sortBy string, limit, offset int) (map[int64]map[int64]Subscription, int, error) {
-	var dbQuery, dbQueryCount string
-
-	sortBy = url.QueryEscape(sortBy)
-	dbQuery = fmt.Sprintf(listQuery, sortBy)
-	dbQueryCount = listQueryCount
-
-	rows, err := db.DB.Query(dbQuery, limit, offset)
+func (db Database) QueryList(sortBy string, limit, offset int) (map[int64]Subscription, int, error) {
+	rows, err := db.DB.Query(listSubscriptions, limit, offset)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, 0, fmt.Errorf("%w %w", ErrorNotFound, err)
@@ -158,35 +141,38 @@ func (db Database) QueryList(sortBy string, limit, offset int) (map[int64]map[in
 	defer rows.Close()
 
 	var count int
-	err = db.DB.QueryRow(dbQueryCount).Scan(&count)
+	err = db.DB.QueryRow(listQueryCount).Scan(&count)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	subscriptions := make(map[int64]map[int64]Subscription)
+	subscriptions := make(map[int64]Subscription)
 	for rows.Next() {
 		var s = Subscription{}
-		var id int64
 		var datacenters string
+		var lastCheckString string
 		var userJSON string
+		var user *tele.User
 
-		err = rows.Scan(&id, &s.PlanCode, &datacenters, &s.Region, &userJSON)
+		err = rows.Scan(&s.ID, &s.PlanCode, &datacenters, &s.Region, &lastCheckString, &s.Notifications, &userJSON)
 		if err != nil {
 			return nil, 0, err
 		}
 
-		err = json.Unmarshal([]byte(userJSON), &s.User)
+		err = json.Unmarshal([]byte(userJSON), &user)
+		if err != nil {
+			return nil, 0, err
+		}
+
+		s.LastCheck, err = time.Parse(time.RFC3339, lastCheckString)
 		if err != nil {
 			return nil, 0, err
 		}
 
 		s.Datacenters = strings.Split(datacenters, ",")
 
-		if _, ok := subscriptions[s.User.ID]; !ok {
-			subscriptions[s.User.ID] = make(map[int64]Subscription)
-		}
-
-		subscriptions[s.User.ID][id] = s
+		s.Users = append(s.Users, user)
+		subscriptions[s.ID] = s
 	}
 	// Check for errors from iterating over rows.
 	if err := rows.Err(); err != nil {
@@ -197,7 +183,7 @@ func (db Database) QueryList(sortBy string, limit, offset int) (map[int64]map[in
 }
 
 func (db Database) Delete(id int64, user_id int64) error {
-	r, err := db.DB.Exec(deleteQuery, id, user_id)
+	r, err := db.DB.Exec(deleteUserSubscription, id, user_id)
 	if err != nil {
 		return err
 	}
@@ -215,7 +201,7 @@ func (db Database) Delete(id int64, user_id int64) error {
 }
 
 func (db Database) DeleteAll(user_id int64) error {
-	r, err := db.DB.Exec(deleteAllQuery, user_id)
+	r, err := db.DB.Exec(deleteAllUserSubscriptions, user_id)
 	if err != nil {
 		return err
 	}
@@ -232,8 +218,17 @@ func (db Database) DeleteAll(user_id int64) error {
 	return nil
 }
 
-func (db Database) UpdateLastCheck(user_id int64) error {
-	_, err := db.DB.Exec(updateLastCheckUser, time.Now().Format(time.RFC3339), user_id)
+func (db Database) UpdateLastCheck(subscriptionID int64) error {
+	_, err := db.DB.Exec(updateLastCheckSubscription, time.Now().Format(time.RFC3339), subscriptionID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (db Database) UpdateNotifications(subscriptionID, notification int64) error {
+	_, err := db.DB.Exec(updateSubscriptionNotifications, notification, subscriptionID)
 	if err != nil {
 		return err
 	}

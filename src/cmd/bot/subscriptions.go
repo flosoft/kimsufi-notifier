@@ -40,25 +40,27 @@ func checkSubscriptions(m *kimsufi.MultiService, s *subscription.Service, b *tel
 			break
 		}
 
-		for user_id, subscriptions := range subscriptions {
-			for id, subscription := range subscriptions {
-				log.Infof("subscriptioncheck: username=%s subscriptionId=%d check", subscription.User.Username, id)
-				availabilities, err := m.Endpoint(subscription.Region).GetAvailabilities(subscription.Datacenters, subscription.PlanCode)
-				if err != nil {
-					log.Errorf("subscriptioncheck: username=%s subscriptionId=%d failed to get availabilities: %v", subscription.User.Username, id, err)
-				}
+		for _, subscription := range subscriptions {
+			log.Infof("subscriptioncheck: subscriptionId=%d check", subscription.ID)
+			availabilities, err := m.Endpoint(subscription.Region).GetAvailabilities(subscription.Datacenters, subscription.PlanCode)
+			if err != nil {
+				log.Errorf("subscriptioncheck: subscriptionId=%d failed to get availabilities: %v", subscription.ID, err)
+			}
 
-				datacenters := availabilities.GetPlanCodeAvailableDatacenters(subscription.PlanCode)
-				if len(datacenters) > 0 {
-					_, err = b.Send(subscription.User, fmt.Sprintf("@%s plan <code>%s</code> is available in <code>%s</code>", subscription.User.Username, subscription.PlanCode, strings.Join(datacenters, "</code>, <code>")), tele.ModeHTML)
+			datacenters := availabilities.GetPlanCodeAvailableDatacenters(subscription.PlanCode)
+			if len(datacenters) > 0 {
+				for _, user := range subscription.Users {
+					_, err = b.Send(user, fmt.Sprintf("@%s plan <code>%s</code> is available in <code>%s</code>", user.Username, subscription.PlanCode, strings.Join(datacenters, "</code>, <code>")), tele.ModeHTML)
 					if err != nil {
-						log.Errorf("subscriptioncheck: username=%s subscriptionId=%d failed to send message: %v", subscription.User.Username, id, err)
+						log.Errorf("subscriptioncheck: subscriptionId=%d username=%s failed to send message: %v", subscription.ID, user.Username, err)
 					} else {
-						s.Unsubscribe(subscription.User, id)
+						subscription.Notifications++
+						s.Unsubscribe(user, subscription.ID)
 					}
 				}
+				s.Database.UpdateNotifications(subscription.ID, subscription.Notifications)
 			}
-			s.Database.UpdateLastCheck(user_id)
+			s.Database.UpdateLastCheck(subscription.ID)
 		}
 
 		currentOffset = currentOffset + subscriptionCheckLimit
