@@ -1,6 +1,7 @@
 package kimsufi
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -92,17 +93,18 @@ func (s *Service) GetAvailabilities(datacenters []string, planCode string) (*Ava
 	u.RawQuery = q.Encode()
 
 	var availabilities *Availabilities
-	cacheEntry, found := s.cache.Get(u.String())
+	cacheKey := fmt.Sprintf("%s%s", s.client.Endpoint(), u.String())
+	cacheEntry, found := s.cache.Get(cacheKey)
 	if found {
-		s.logger.Debugf("cache hit: %s", u.String())
+		s.logger.Debugf("cache hit: %s", cacheKey)
 		availabilities = cacheEntry.(*Availabilities)
 	} else {
-		s.logger.Debugf("cache miss: %s", u.String())
+		s.logger.Debugf("cache miss: %s", cacheKey)
 		err = s.client.GetUnAuth(u.String(), &availabilities)
 		if err != nil {
 			return nil, err
 		}
-		s.cache.Set(u.String(), availabilities, cache.DefaultExpiration)
+		s.cache.Set(cacheKey, availabilities, cache.DefaultExpiration)
 	}
 
 	return availabilities, nil
@@ -115,18 +117,19 @@ func (s *Service) ListServers(ovhSubsidiary string) (*Catalog, error) {
 	u.RawQuery = q.Encode()
 
 	var catalog *Catalog
-	cacheEntry, found := s.cache.Get(u.String())
+	cacheKey := fmt.Sprintf("%s%s", s.client.Endpoint(), u.String())
+	cacheEntry, found := s.cache.Get(cacheKey)
 	if found {
-		s.logger.Debugf("cache hit: %s", u.String())
+		s.logger.Debugf("cache hit: %s", cacheKey)
 		catalog = cacheEntry.(*Catalog)
 
 	} else {
-		s.logger.Debugf("cache miss: %s", u.String())
+		s.logger.Debugf("cache miss: %s", cacheKey)
 		err = s.client.GetUnAuth(u.String(), &catalog)
 		if err != nil {
 			return nil, err
 		}
-		s.cache.Set(u.String(), catalog, cache.DefaultExpiration)
+		s.cache.Set(cacheKey, catalog, cache.DefaultExpiration)
 	}
 
 	return catalog, nil
@@ -160,18 +163,19 @@ func (s *Service) GetOrderSchema() (*Order, error) {
 	u.RawQuery = q.Encode()
 
 	var order *Order
-	cacheEntry, found := s.cache.Get(u.String())
+	cacheKey := fmt.Sprintf("%s%s", s.client.Endpoint(), u.String())
+	cacheEntry, found := s.cache.Get(cacheKey)
 	if found {
-		s.logger.Debugf("cache hit: %s", u.String())
+		s.logger.Debugf("cache hit: %s", cacheKey)
 		order = cacheEntry.(*Order)
 
 	} else {
-		s.logger.Debugf("cache miss: %s", u.String())
+		s.logger.Debugf("cache miss: %s", cacheKey)
 		err = s.client.GetUnAuth(u.String(), &order)
 		if err != nil {
 			return nil, err
 		}
-		s.cache.Set(u.String(), order, cache.DefaultExpiration)
+		s.cache.Set(cacheKey, order, cache.DefaultExpiration)
 	}
 
 	return order, nil
