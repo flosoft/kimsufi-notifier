@@ -29,7 +29,7 @@ var (
 )
 
 func init() {
-	Cmd.PersistentFlags().StringVarP(&ovhSubsidiary, "country", "c", "FR", fmt.Sprintf("country code to filter entries (allowed values: %s)", strings.Join(kimsufi.AllowedCountries, ", ")))
+	Cmd.PersistentFlags().StringVarP(&ovhSubsidiary, "country", "c", "FR", "country code to filter entries")
 	Cmd.PersistentFlags().StringSliceVarP(&datacenters, "datacenters", "d", nil, fmt.Sprintf("comma separated list of datacenters to check (allowed values: %s)", strings.Join(kimsufi.AllowedDatacenters, ", ")))
 	Cmd.PersistentFlags().StringVarP(&planCode, "plan-code", "p", "", fmt.Sprintf("plan code name (e.g. %s)", kimsufi.PlanCodeExample))
 }

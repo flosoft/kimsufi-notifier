@@ -1,8 +1,30 @@
 package kimsufi
 
 var (
-	AllowedCountries = []string{"CZ", "DE", "ES", "FI", "FR", "GB", "IE", "IT", "LT", "MA", "NL", "PL", "PT", "SN", "TN"}
+	AllowedRegions = []Region{
+		{
+			Name:      "Europe",
+			Endpoint:  "ovh-eu",
+			Countries: []string{"CZ", "DE", "ES", "FI", "FR", "GB", "IE", "IT", "LT", "MA", "NL", "PL", "PT", "SN", "TN"},
+		},
+		{
+			Name:      "Other",
+			Endpoint:  "ovh-ca",
+			Countries: []string{"ASIA", "AU", "CA", "IN", "QC", "SG", "WE", "WS"},
+		},
+		{
+			Name:      "US",
+			Endpoint:  "ovh-us",
+			Countries: []string{"US"},
+		},
+	}
 )
+
+type Region struct {
+	Name      string
+	Endpoint  string
+	Countries []string
+}
 
 type Order struct {
 	Components Components `json:"components"`

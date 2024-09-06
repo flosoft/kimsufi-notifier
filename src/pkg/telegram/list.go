@@ -16,8 +16,9 @@ import (
 	"github.com/TheoBrigitte/kimsufi-notifier/pkg/kimsufi"
 )
 
-func (b *Bot) subscribeCommand(c tele.Context) error {
-	log.Info(fmt.Sprintf("Handle /subscribe command user=%s", formatUser(c.Sender())))
+func (b *Bot) subscribeSelectRegion(c tele.Context) error {
+	// Inactive
+	log.Info(fmt.Sprintf("subscribeSelectRegion user=%s", formatUser(c.Sender())))
 
 	m := &tele.ReplyMarkup{ResizeKeyboard: true}
 
@@ -44,42 +45,22 @@ func (b *Bot) subscribeCommand(c tele.Context) error {
 	return c.Send("Select a region to list servers from", m)
 }
 
-func (b *Bot) subscribeSelectCountry(c tele.Context, args []string) error {
-	if len(args) < 1 {
-		log.Errorf("subscribeSelectCountry missing arguments args=%d", len(args))
-		return c.Edit("Failed to fetch countries")
-	}
-	region := args[0]
-
-	log.Info(fmt.Sprintf("subscribeSelectCountry user=%s region=%s", formatUser(c.Sender()), region))
-
-	o, err := b.kimsufiService.Endpoint(region).GetOrderSchema()
-	if err != nil {
-		log.Errorf("subscribeSelectCountry failed to get order schema: %v", err)
-		return c.Edit("Failed to fetch countries")
-	}
+func (b *Bot) subscribeCommand(c tele.Context) error {
+	log.Info(fmt.Sprintf("Handle /subscribe command user=%s", formatUser(c.Sender())))
 
 	m := &tele.ReplyMarkup{ResizeKeyboard: true}
 
 	btns := []tele.Btn{}
-	for _, country := range o.GetCountries() {
-		btns = append(btns, m.Data(strings.ToUpper(country), ButtonCountry, region, country))
-	}
-
-	if len(o.GetCountries()) == 0 {
-		err = c.Edit("No countries found")
-		if err != nil {
-			log.Errorf("subscribeSelectCountry failed to send message: %v", err)
-			return err
+	for _, region := range kimsufi.AllowedRegions {
+		for _, country := range region.Countries {
+			btns = append(btns, m.Data(region.Name+": "+strings.ToUpper(country), ButtonCountry, region.Endpoint, country))
 		}
-
-		return c.Respond(&tele.CallbackResponse{})
 	}
 
-	rows := m.Split(8, btns)
+	rows := m.Split(2, btns)
 	rows = append(rows, m.Row(m.Data("Cancel", ButtonCancel, "cancel")))
 	m.Inline(rows...)
-	err = c.Edit("Select a country to list servers from", m)
+	err := c.Send("Select a country to list servers from", m)
 	if err != nil {
 		log.Errorf("subscribeSelectCountry failed to send message: %v", err)
 		return err

@@ -27,21 +27,6 @@ func categoriesCommand(c tele.Context) error {
 	return c.Send(output, tele.ModeHTML)
 }
 
-func countriesCommand(c tele.Context) error {
-	log.Info("Handle /countries command user=" + formatUser(c.Sender()))
-
-	countries := kimsufi.AllowedCountries
-
-	output := "Allowed countries:\n"
-	for _, country := range countries {
-		if country != "" {
-			output += "<code>" + country + "</code>\n"
-		}
-	}
-
-	return c.Send(output, tele.ModeHTML)
-}
-
 func checkCommand(k *kimsufi.Service) func(tele.Context) error {
 	return func(c tele.Context) error {
 		args := c.Args()

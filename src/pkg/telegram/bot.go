@@ -59,8 +59,8 @@ func NewBot(k *kimsufi.MultiService, s *subscription.Service) (*Bot, error) {
 		log.WithField("data", strings.Join(data, "|")).WithField("unique", strings.Join(values, "-")).Trace("Callback parsedData")
 
 		switch values[0] {
-		case ButtonRegion:
-			return bot.subscribeSelectCountry(c, data)
+		//case ButtonRegion:
+		//	return bot.subscribeSelectCountry(c, data)
 		case ButtonCountry:
 			return bot.listSelectCategory(c, data)
 		case ButtonCategory:
