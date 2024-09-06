@@ -153,5 +153,4 @@ func (b *Bot) subscribeCommand_old(c tele.Context) error {
 	}
 
 	return b.subscribe(c, region, planCode, datacenters)
-
 }

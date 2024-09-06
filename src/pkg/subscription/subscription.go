@@ -9,6 +9,7 @@ import (
 type Subscription struct {
 	PlanCode    string
 	Datacenters []string
+	Region      string
 	User        *tele.User
 	LastCheck   time.Time
 }
@@ -32,6 +33,7 @@ func (s *Service) Subscribe(telegramUser *tele.User, region, planCode string, da
 	subscription := Subscription{
 		PlanCode:    planCode,
 		Datacenters: datacenters,
+		Region:      region,
 		User:        telegramUser,
 		LastCheck:   time.Now(),
 	}

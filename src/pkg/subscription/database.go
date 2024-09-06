@@ -18,10 +18,10 @@ var (
 )
 
 const (
-	insertQuery         = `INSERT INTO subscriptions (plan_code, datacenters, user_id, user, last_check) VALUES (?, ?, ?, ?, ?);`
+	insertQuery         = `INSERT INTO subscriptions (plan_code, datacenters, region, user_id, user, last_check) VALUES (?, ?, ?, ?, ?, ?);`
 	selectQuery         = `SELECT plan_code, datacenters, user FROM subscriptions WHERE id = ? AND user_id = ?;`
-	selectUserQuery     = `SELECT id, plan_code, datacenters, user, last_check FROM subscriptions WHERE user_id = ?;`
-	listQuery           = `SELECT id, plan_code, datacenters, user FROM subscriptions ORDER BY %s DESC LIMIT ? OFFSET ?;`
+	selectUserQuery     = `SELECT id, plan_code, datacenters, region, user, last_check FROM subscriptions WHERE user_id = ?;`
+	listQuery           = `SELECT id, plan_code, datacenters, region, user FROM subscriptions ORDER BY %s DESC LIMIT ? OFFSET ?;`
 	listQueryCount      = `SELECT count(*) FROM subscriptions;`
 	updateLastCheckUser = `UPDATE subscriptions SET last_check = ? WHERE user_id = ?;`
 	deleteQuery         = `DELETE FROM subscriptions WHERE id = ? AND user_id = ?;`
@@ -56,7 +56,7 @@ func (db Database) Insert(s Subscription) (int64, error) {
 		return -1, err
 	}
 
-	r, err := db.DB.Exec(insertQuery, s.PlanCode, strings.Join(s.Datacenters, ","), s.User.ID, string(userJSON), s.LastCheck.Format(time.RFC3339))
+	r, err := db.DB.Exec(insertQuery, s.PlanCode, strings.Join(s.Datacenters, ","), s.Region, s.User.ID, string(userJSON), s.LastCheck.Format(time.RFC3339))
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
 			//if errors.Is(err, sqlite3.ErrConstraintUnique) {
@@ -118,7 +118,7 @@ func (db Database) QueryUser(user_id int64) (map[int64]Subscription, error) {
 		var userJSON string
 		var lastCheckString string
 
-		err = rows.Scan(&id, &s.PlanCode, &datacenters, &userJSON, &lastCheckString)
+		err = rows.Scan(&id, &s.PlanCode, &datacenters, &s.Region, &userJSON, &lastCheckString)
 		if err != nil {
 			return nil, err
 		}
@@ -170,7 +170,7 @@ func (db Database) QueryList(sortBy string, limit, offset int) (map[int64]map[in
 		var datacenters string
 		var userJSON string
 
-		err = rows.Scan(&id, &s.PlanCode, &datacenters, &userJSON)
+		err = rows.Scan(&id, &s.PlanCode, &datacenters, &s.Region, &userJSON)
 		if err != nil {
 			return nil, 0, err
 		}

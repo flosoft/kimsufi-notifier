@@ -31,7 +31,7 @@ func runner(cmd *cobra.Command, args []string) error {
 		URL:    kimsufi.GetOVHEndpoint(cmd.Flag(flag.OVHAPIEndpointFlagName).Value.String()),
 		Logger: log.StandardLogger(),
 	}
-	k, err := kimsufi.NewService(d)
+	m, err := kimsufi.NewService(d)
 	if err != nil {
 		return fmt.Errorf("failed to initialize kimsufi service: %w", err)
 	}
@@ -41,12 +41,12 @@ func runner(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to initialize subscription service: %w", err)
 	}
 
-	telegramBot, err := telegram.NewBot(k, s)
+	telegramBot, err := telegram.NewBot(m, s)
 	if err != nil {
 		return fmt.Errorf("failed to initialize telegram bot: %w", err)
 	}
 
-	startSubscriptionCheck(k.Endpoint(cmd.Flag(flag.OVHAPIEndpointFlagName).Value.String()), s, telegramBot.Bot)
+	startSubscriptionCheck(m, s, telegramBot.Bot)
 
 	fmt.Println("Bot is running")
 	telegramBot.Start()

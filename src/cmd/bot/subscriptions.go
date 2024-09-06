@@ -18,17 +18,17 @@ var (
 	subscriptionCheckOffset   = 0
 )
 
-func startSubscriptionCheck(k *kimsufi.Service, s *subscription.Service, b *tele.Bot) {
+func startSubscriptionCheck(m *kimsufi.MultiService, s *subscription.Service, b *tele.Bot) {
 	ticker := time.NewTicker(subscriptionCheckInterval)
 
 	go func() {
 		for range ticker.C {
-			checkSubscriptions(k, s, b)
+			checkSubscriptions(m, s, b)
 		}
 	}()
 }
 
-func checkSubscriptions(k *kimsufi.Service, s *subscription.Service, b *tele.Bot) error {
+func checkSubscriptions(m *kimsufi.MultiService, s *subscription.Service, b *tele.Bot) error {
 	currentOffset := subscriptionCheckOffset
 	for {
 		subscriptions, _, err := s.ListPaginate("user_id", subscriptionCheckLimit, currentOffset)
@@ -43,7 +43,7 @@ func checkSubscriptions(k *kimsufi.Service, s *subscription.Service, b *tele.Bot
 		for user_id, subscriptions := range subscriptions {
 			for id, subscription := range subscriptions {
 				log.Infof("subscriptioncheck: username=%s subscriptionId=%d check", subscription.User.Username, id)
-				availabilities, err := k.GetAvailabilities(subscription.Datacenters, subscription.PlanCode)
+				availabilities, err := m.Endpoint(subscription.Region).GetAvailabilities(subscription.Datacenters, subscription.PlanCode)
 				if err != nil {
 					log.Errorf("subscriptioncheck: username=%s subscriptionId=%d failed to get availabilities: %v", subscription.User.Username, id, err)
 				}
