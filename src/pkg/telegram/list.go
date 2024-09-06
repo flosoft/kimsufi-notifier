@@ -60,13 +60,8 @@ func (b *Bot) subscribeCommand(c tele.Context) error {
 	rows := m.Split(2, btns)
 	rows = append(rows, m.Row(m.Data("Cancel", ButtonCancel, "cancel")))
 	m.Inline(rows...)
-	err := c.Send("Select a country or region to list servers from", m)
-	if err != nil {
-		log.Errorf("subscribeSelectCountry failed to send message: %v", err)
-		return err
-	}
 
-	return c.Respond(&tele.CallbackResponse{})
+	return c.Send("Select a country or region to list servers from", m)
 }
 
 func (b *Bot) listSelectCategory(c tele.Context, args []string) error {
