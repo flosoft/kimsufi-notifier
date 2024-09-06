@@ -101,12 +101,12 @@ func (b *Bot) listSubscriptions(c tele.Context, showButtons bool) error {
 	for k, v := range subscriptions {
 		fmt.Fprintf(w, "%d\t%s\t%s\t%s\n", k, v.PlanCode, strings.Join(v.Datacenters, ", "), v.LastCheck.Format(time.RFC1123))
 		s := strconv.FormatInt(k, 10)
-		btns = append(btns, m.Data(s, fmt.Sprintf("unsubscribe-%d", k), s))
+		btns = append(btns, m.Data(s, ButtontUnsubscribe, s))
 	}
 	w.Flush()
 	rows := m.Split(8, btns)
-	rows = append(rows, m.Row(m.Data("Unsubscribe from all", "unsubscribe-all", "all")))
-	rows = append(rows, m.Row(m.Data("Cancel", "cancel", "cancel")))
+	rows = append(rows, m.Row(m.Data("Unsubscribe from all", ButtontUnsubscribe, "all")))
+	rows = append(rows, m.Row(m.Data("Cancel", ButtonCancel, "cancel")))
 	m.Inline(rows...)
 
 	if len(subscriptions) == 0 {

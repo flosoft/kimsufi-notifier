@@ -1,7 +1,6 @@
 package kimsufi
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -10,6 +9,7 @@ import (
 	"github.com/ovh/go-ovh/ovh"
 	"github.com/patrickmn/go-cache"
 	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -22,6 +22,13 @@ type Config struct {
 	Logger *logrus.Logger
 }
 
+type MultiService struct {
+	cache   *cache.Cache
+	clients map[string]*ovh.Client
+	logger  *logrus.Logger
+	url     *url.URL
+}
+
 type Service struct {
 	cache  *cache.Cache
 	client *ovh.Client
@@ -29,24 +36,48 @@ type Service struct {
 	url    *url.URL
 }
 
-func NewService(config Config) (*Service, error) {
-	client, err := ovh.NewClient(config.URL, "none", "none", "none")
-	//c, err := ovh.NewEndpointClient(ovh.KimsufiEU)
-	if err != nil {
-		fmt.Println("nope")
-		return nil, err
-	}
-	client.Logger = NewRequestLogger(config.Logger)
-
+func NewService(config Config) (*MultiService, error) {
 	c := cache.New(cacheExpiration, cacheCleanup)
 
-	s := &Service{
-		cache:  c,
-		client: client,
-		logger: config.Logger,
+	s := &MultiService{
+		cache:   c,
+		clients: make(map[string]*ovh.Client, 0),
+		logger:  config.Logger,
+	}
+
+	for endpoint := range ovh.Endpoints {
+		e := strings.Split(endpoint, "-")
+		if len(e) >= 2 {
+			if e[0] == "ovh" {
+				client, err := ovh.NewClient(ovh.Endpoints[endpoint], "none", "none", "none")
+				client.Logger = NewRequestLogger(config.Logger)
+				//c, err := ovh.NewEndpointClient(ovh.KimsufiEU)
+				if err != nil {
+					log.Errorf("failed to create OVH client for %s: %v", endpoint, err)
+					return nil, err
+				}
+
+				s.clients[endpoint] = client
+			}
+		}
 	}
 
 	return s, nil
+}
+
+func (m *MultiService) Endpoint(endpoint string) *Service {
+	for e, client := range m.clients {
+		if e == endpoint {
+			return &Service{
+				cache:  m.cache,
+				client: client,
+				logger: m.logger,
+				url:    m.url,
+			}
+		}
+	}
+
+	return nil
 }
 
 func (s *Service) GetAvailabilities(datacenters []string, planCode string) (*Availabilities, error) {
@@ -119,4 +150,29 @@ func (l *Logger) LogRequest(r *http.Request) {
 
 func (l *Logger) LogResponse(r *http.Response) {
 	l.logger.Debugf("kimsufi: %s %s %v\n", r.Status, r.Proto, r.Header)
+}
+
+// https://eu.api.ovh.com/v1/order.json
+func (s *Service) GetOrderSchema() (*Order, error) {
+	u, err := url.Parse("/order.json")
+	q := u.Query()
+	q.Set("format", "openapi3")
+	u.RawQuery = q.Encode()
+
+	var order *Order
+	cacheEntry, found := s.cache.Get(u.String())
+	if found {
+		s.logger.Debugf("cache hit: %s", u.String())
+		order = cacheEntry.(*Order)
+
+	} else {
+		s.logger.Debugf("cache miss: %s", u.String())
+		err = s.client.GetUnAuth(u.String(), &order)
+		if err != nil {
+			return nil, err
+		}
+		s.cache.Set(u.String(), order, cache.DefaultExpiration)
+	}
+
+	return order, nil
 }

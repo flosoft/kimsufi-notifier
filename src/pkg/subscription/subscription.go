@@ -28,7 +28,7 @@ func NewService(databaseFilename string) (s *Service, err error) {
 	return s, nil
 }
 
-func (s *Service) Subscribe(telegramUser *tele.User, planCode string, datacenters []string) (int64, error) {
+func (s *Service) Subscribe(telegramUser *tele.User, region, planCode string, datacenters []string) (int64, error) {
 	subscription := Subscription{
 		PlanCode:    planCode,
 		Datacenters: datacenters,

@@ -39,10 +39,11 @@ func runner(cmd *cobra.Command, args []string) error {
 		URL:    kimsufi.GetOVHEndpoint(cmd.Flag(flag.OVHAPIEndpointFlagName).Value.String()),
 		Logger: log.StandardLogger(),
 	}
-	k, err := kimsufi.NewService(d)
+	m, err := kimsufi.NewService(d)
 	if err != nil {
 		return fmt.Errorf("failed to initialize kimsufi service: %w", err)
 	}
+	k := m.Endpoint(cmd.Flag(flag.OVHAPIEndpointFlagName).Value.String())
 
 	c, err := k.ListServers(ovhSubsidiary)
 	if err != nil {

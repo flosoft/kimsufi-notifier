@@ -46,7 +46,7 @@ func runner(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to initialize telegram bot: %w", err)
 	}
 
-	startSubscriptionCheck(k, s, telegramBot.Bot)
+	startSubscriptionCheck(k.Endpoint(cmd.Flag(flag.OVHAPIEndpointFlagName).Value.String()), s, telegramBot.Bot)
 
 	fmt.Println("Bot is running")
 	telegramBot.Start()

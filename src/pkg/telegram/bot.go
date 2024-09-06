@@ -15,11 +15,11 @@ import (
 
 type Bot struct {
 	*tele.Bot
-	kimsufiService      *kimsufi.Service
+	kimsufiService      *kimsufi.MultiService
 	subscriptionService *subscription.Service
 }
 
-func NewBot(k *kimsufi.Service, s *subscription.Service) (*Bot, error) {
+func NewBot(k *kimsufi.MultiService, s *subscription.Service) (*Bot, error) {
 	pref := tele.Settings{
 		Token:  os.Getenv("TOKEN"),
 		Poller: &tele.LongPoller{Timeout: 10 * time.Second},
@@ -59,17 +59,19 @@ func NewBot(k *kimsufi.Service, s *subscription.Service) (*Bot, error) {
 		log.WithField("data", strings.Join(data, "|")).WithField("unique", strings.Join(values, "-")).Trace("Callback parsedData")
 
 		switch values[0] {
-		case "listcountry":
+		case ButtonRegion:
+			return bot.subscribeSelectCountry(c, data)
+		case ButtonCountry:
 			return bot.listSelectCategory(c, data)
-		case "listcategory":
+		case ButtonCategory:
 			return bot.listWrapper(c, data)
-		case "listplancode":
+		case ButtonPlanCode:
 			return bot.subscribeSelectDatacenters(c, data)
-		case "subscribedatacenters":
+		case ButtonDatacenter:
 			return bot.subscribeWrapper(c, data)
-		case "unsubscribe":
+		case ButtontUnsubscribe:
 			return bot.unsubscribeWrapper(c, data)
-		case "cancel":
+		case ButtonCancel:
 			return bot.cancelWrapper(c)
 		}
 
